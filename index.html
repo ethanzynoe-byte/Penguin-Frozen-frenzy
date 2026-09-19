@@ -1,0 +1,1742 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PENGUIN: FROZEN FRENZY</title>
+<!-- Tailwind CSS for UI Layouts -->
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap');
+
+* {
+user-select: none;
+-webkit-user-select: none;
+touch-action: manipulation;
+box-sizing: border-box;
+}
+
+body, html {
+margin: 0;
+padding: 0;
+width: 100%;
+height: 100%;
+overflow: hidden;
+background-color: #0f172a;
+font-family: 'Nunito', sans-serif;
+}
+
+canvas {
+display: block;
+width: 100%;
+height: 100%;
+background: #0f172a;
+}
+
+.font-fredoka {
+font-family: 'Fredoka One', cursive, sans-serif;
+}
+
+.glass-panel {
+background: rgba(15, 23, 42, 0.85);
+backdrop-filter: blur(12px);
+-webkit-backdrop-filter: blur(12px);
+border: 2px solid rgba(56, 189, 248, 0.3);
+box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+}
+
+.btn-action {
+transition: all 0.15s ease-in-out;
+box-shadow: 0 6px 0 rgba(0, 0, 0, 0.3);
+cursor: pointer;
+}
+
+.btn-action:hover {
+transform: translateY(-2px);
+box-shadow: 0 8px 0 rgba(0, 0, 0, 0.3);
+}
+
+.btn-action:active {
+transform: translateY(4px);
+box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+width: 6px;
+}
+::-webkit-scrollbar-track {
+background: rgba(15, 23, 42, 0.5);
+}
+::-webkit-scrollbar-thumb {
+background: #38bdf8;
+border-radius: 3px;
+}
+</style>
+</head>
+<body class="bg-slate-900 text-white overflow-hidden select-none">
+
+<!-- GAME CANVAS -->
+<canvas id="gameCanvas"></canvas>
+
+<!-- UI CONTAINER OVERLAY -->
+<div id="ui-container" class="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between">
+
+<!-- HUD TOP BAR (Playing State) -->
+<div id="hud-overlay" class="hidden p-4 flex justify-between items-start pointer-events-none">
+<!-- HP & Player Info -->
+<div class="glass-panel p-3 rounded-2xl flex items-center space-x-3 pointer-events-auto min-w-[220px]">
+<div class="text-3xl">🐧</div>
+<div class="flex-1">
+<div class="flex justify-between text-xs font-bold mb-1">
+<span class="text-sky-300">PINGU</span>
+<span id="hp-text" class="text-emerald-400">100 / 100</span>
+</div>
+<div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden p-0.5 border border-slate-700">
+<div id="hp-bar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-200" style="width: 100%;"></div>
+</div>
+</div>
+</div>
+
+<!-- Room / Area Tracker -->
+<div class="glass-panel px-6 py-2 rounded-2xl text-center pointer-events-auto">
+<div id="area-title" class="text-xs font-extrabold text-sky-400 tracking-wider">AREA 1: SNOWY SHORE</div>
+<div id="room-title" class="text-xl font-fredoka text-amber-300">ROOM 1</div>
+</div>
+
+<!-- Coins & Mute Button -->
+<div class="flex items-center space-x-2 pointer-events-auto">
+<div class="glass-panel px-4 py-2 rounded-2xl flex items-center space-x-2">
+<span class="text-xl">🐟</span>
+<span id="hud-coins" class="font-fredoka text-amber-400 text-lg">0</span>
+</div>
+<button id="btn-sound" onclick="toggleSound()" class="glass-panel p-2.5 rounded-2xl hover:bg-slate-800 text-xl btn-action">
+🔊
+</button>
+</div>
+</div>
+
+<!-- MAIN MENU -->
+<div id="main-menu" class="pointer-events-auto absolute inset-0 flex flex-col items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+<div class="text-center max-w-md w-full glass-panel p-8 rounded-3xl border-2 border-sky-400/40 shadow-2xl relative overflow-hidden">
+<div class="absolute -top-10 -left-10 w-32 h-32 bg-sky-500/20 rounded-full blur-2xl"></div>
+<div class="absolute -bottom-10 -right-10 w-32 h-32 bg-blue-600/20 rounded-full blur-2xl"></div>
+
+<div class="text-6xl mb-2 animate-bounce">🐧</div>
+<h1 class="text-4xl sm:text-5xl font-fredoka text-transparent bg-clip-text bg-gradient-to-b from-sky-200 via-sky-400 to-blue-600 tracking-wider drop-shadow-md">
+PENGUIN
+</h1>
+<h2 class="text-xl font-fredoka text-amber-400 tracking-widest mb-6 drop-shadow">
+FROZEN FRENZY
+</h2>
+
+<div class="flex justify-center items-center space-x-2 bg-slate-800/80 px-4 py-2 rounded-xl mb-6 border border-slate-700/50 inline-flex">
+<span class="text-2xl">🐟</span>
+<span id="menu-coins" class="text-2xl font-fredoka text-amber-400">0</span>
+<span class="text-xs text-slate-400 font-bold ml-1">FISH COINS</span>
+</div>
+
+<div class="space-y-3">
+<button id="btn-start" onclick="startGame()" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-fredoka text-xl rounded-2xl border-b-4 border-emerald-700 btn-action tracking-wide">
+PLAY NOW 🚀
+</button>
+<button id="btn-shop" onclick="openShop()" class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-fredoka text-lg rounded-2xl border-b-4 border-amber-700 btn-action tracking-wide">
+UPGRADES SHOP 🛒
+</button>
+</div>
+
+<div class="mt-6 text-xs text-slate-400 font-semibold space-y-1">
+<p>⌨️ Controls: WASD / Arrow Keys</p>
+<p>📱 Mobile: Touch Virtual Joystick</p>
+</div>
+</div>
+</div>
+
+<!-- UPGRADES SHOP MODAL -->
+<div id="shop-modal" class="hidden pointer-events-auto absolute inset-0 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+<div class="max-w-md w-full glass-panel p-6 rounded-3xl border-2 border-amber-400/40">
+<div class="flex justify-between items-center mb-6">
+<div>
+<h2 class="text-2xl font-fredoka text-amber-400">PERMANENT SHOP</h2>
+<p class="text-xs text-slate-300">Tingkatkan stats Pingu untuk run berikutnya</p>
+</div>
+<div class="flex items-center space-x-1 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700">
+<span>🐟</span>
+<span id="shop-coins" class="font-fredoka text-amber-400 text-lg">0</span>
+</div>
+</div>
+
+<div class="space-y-3 mb-6">
+<!-- Base HP Upgrade -->
+<div class="bg-slate-800/80 p-3.5 rounded-2xl border border-slate-700 flex justify-between items-center">
+<div>
+<div class="font-bold text-sky-300 flex items-center gap-1">❤️ Base HP <span id="shop-hp-lvl" class="text-xs text-amber-400">Lvl 0</span></div>
+<div class="text-xs text-slate-400">+15 Max Health</div>
+</div>
+<button id="btn-buy-hp" onclick="buyHP()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-fredoka rounded-xl btn-action text-sm flex items-center gap-1">
+<span>🐟 50</span>
+</button>
+</div>
+
+<!-- Base Damage Upgrade -->
+<div class="bg-slate-800/80 p-3.5 rounded-2xl border border-slate-700 flex justify-between items-center">
+<div>
+<div class="font-bold text-sky-300 flex items-center gap-1">⚔️ Base Damage <span id="shop-dmg-lvl" class="text-xs text-amber-400">Lvl 0</span></div>
+<div class="text-xs text-slate-400">+5 Attack Damage</div>
+</div>
+<button id="btn-buy-dmg" onclick="buyDamage()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-fredoka rounded-xl btn-action text-sm flex items-center gap-1">
+<span>🐟 50</span>
+</button>
+</div>
+
+<!-- Move Speed Upgrade -->
+<div class="bg-slate-800/80 p-3.5 rounded-2xl border border-slate-700 flex justify-between items-center">
+<div>
+<div class="font-bold text-sky-300 flex items-center gap-1">👟 Move Speed <span id="shop-spd-lvl" class="text-xs text-amber-400">Lvl 0</span></div>
+<div class="text-xs text-slate-400">+0.3 Movement Speed</div>
+</div>
+<button id="btn-buy-spd" onclick="buySpeed()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-fredoka rounded-xl btn-action text-sm flex items-center gap-1">
+<span>🐟 50</span>
+</button>
+</div>
+</div>
+
+<button id="btn-close-shop" onclick="closeShop()" class="w-full py-3 bg-slate-700 hover:bg-slate-600 text-white font-fredoka rounded-2xl border-b-4 border-slate-900 btn-action">
+BACK TO MENU
+</button>
+</div>
+</div>
+
+<!-- UPGRADE CHOICE MODAL (Room Clear) -->
+<div id="upgrade-modal" class="hidden pointer-events-auto absolute inset-0 flex flex-col items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+<div class="text-center mb-6">
+<span class="text-xs font-bold tracking-widest text-emerald-400 bg-emerald-950/80 border border-emerald-500/40 px-3 py-1 rounded-full">ROOM CLEAR!</span>
+<h2 class="text-3xl font-fredoka text-sky-300 mt-2">CHOOSE YOUR POWER-UP</h2>
+</div>
+
+<div id="upgrade-cards" class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl w-full">
+<!-- Dynamic Upgrade Cards inserted via JS -->
+</div>
+</div>
+
+<!-- AREA TRANSITION TOAST -->
+<div id="area-transition-modal" class="hidden pointer-events-none absolute inset-0 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm z-20">
+<div class="text-center glass-panel p-8 rounded-3xl border-2 border-sky-400 animate-pulse">
+<div class="text-5xl mb-2">🏔️</div>
+<h2 id="trans-title" class="text-3xl font-fredoka text-sky-300 mb-2">ENTERING AREA 2</h2>
+<p id="trans-desc" class="text-amber-300 font-bold">FROZEN TUNDRA</p>
+</div>
+</div>
+
+<!-- GAME OVER MODAL -->
+<div id="gameover-modal" class="hidden pointer-events-auto absolute inset-0 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
+<div class="max-w-md w-full glass-panel p-8 rounded-3xl border-2 border-rose-500/40 text-center">
+<div class="text-6xl mb-2">💀</div>
+<h2 class="text-4xl font-fredoka text-rose-500 mb-1">GAME OVER</h2>
+<p class="text-slate-300 text-sm mb-6">Pingu kehabisan tenaga di tengah badai es...</p>
+
+<div class="bg-slate-800/80 p-4 rounded-2xl border border-slate-700 space-y-2 mb-6 text-left">
+<div class="flex justify-between text-sm">
+<span class="text-slate-400">Area & Room:</span>
+<span id="go-room" class="font-bold text-amber-400">Area 1 - Room 1</span>
+</div>
+<div class="flex justify-between text-sm">
+<span class="text-slate-400">Enemies Defeated:</span>
+<span id="go-kills" class="font-bold text-sky-400">0</span>
+</div>
+<div class="flex justify-between text-sm">
+<span class="text-slate-400">Coins Earned:</span>
+<span id="go-coins" class="font-bold text-amber-300">🐟 0</span>
+</div>
+</div>
+
+<button id="btn-retry" onclick="retryGame()" class="w-full py-4 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-fredoka text-xl rounded-2xl border-b-4 border-blue-800 btn-action">
+TRY AGAIN 🔄
+</button>
+</div>
+</div>
+
+<!-- VICTORY MODAL -->
+<div id="victory-modal" class="hidden pointer-events-auto absolute inset-0 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
+<div class="max-w-md w-full glass-panel p-8 rounded-3xl border-2 border-amber-400/50 text-center">
+<div class="text-6xl mb-2 animate-bounce">🏆</div>
+<h2 class="text-4xl font-fredoka text-amber-400 mb-1">VICTORY!</h2>
+<p class="text-sky-200 text-sm mb-6">Pingu berhasil menaklukkan seluruh Kutub Es!</p>
+
+<div class="bg-slate-800/80 p-4 rounded-2xl border border-slate-700 space-y-2 mb-6 text-left">
+<div class="flex justify-between text-sm">
+<span class="text-slate-400">Total Coins Earned:</span>
+<span id="vic-coins" class="font-bold text-amber-300">🐟 0</span>
+</div>
+<div class="flex justify-between text-sm">
+<span class="text-slate-400">Total Enemies Defeated:</span>
+<span id="vic-kills" class="font-bold text-sky-300">0</span>
+</div>
+</div>
+
+<button id="btn-victory-continue" onclick="continueVictory()" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-fredoka text-xl rounded-2xl border-b-4 border-emerald-800 btn-action">
+CONTINUE TO MENU 👑
+</button>
+</div>
+</div>
+
+<!-- VIRTUAL JOYSTICK FOR MOBILE -->
+<div id="joystick-wrapper" style="position: absolute; width: 130px; height: 130px; pointer-events: auto; display: none; z-index: 30;">
+<canvas id="joystickCanvas" width="130" height="130"></canvas>
+</div>
+</div>
+
+<script>
+// --- 1. SOUND ENGINE (SAFE & ROBUST) ---
+class SoundEngine {
+constructor() {
+this.ctx = null;
+this.enabled = true;
+}
+init() {
+if (!this.enabled) return;
+try {
+if (!this.ctx) {
+const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+if (AudioContextClass) this.ctx = new AudioContextClass();
+}
+if (this.ctx && this.ctx.state === 'suspended') {
+this.ctx.resume().catch(() => {});
+}
+} catch(e) {}
+}
+playTone(freq, duration, type = 'sine', volume = 0.1) {
+if (!this.enabled) return;
+try {
+this.init();
+if (!this.ctx) return;
+const osc = this.ctx.createOscillator();
+const gain = this.ctx.createGain();
+osc.type = type;
+osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+gain.gain.setValueAtTime(volume, this.ctx.currentTime);
+gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+osc.connect(gain);
+gain.connect(this.ctx.destination);
+osc.start();
+osc.stop(this.ctx.currentTime + duration);
+} catch(e) {}
+}
+playThrow() { this.playTone(420, 0.12, 'sine', 0.15); }
+playHit() { this.playTone(180, 0.08, 'square', 0.1); }
+playCrit() {
+this.playTone(650, 0.15, 'triangle', 0.2);
+setTimeout(() => this.playTone(850, 0.15, 'triangle', 0.2), 60);
+}
+playLevelUp() {
+if (!this.enabled) return;
+this.playTone(400, 0.1, 'sine', 0.15);
+setTimeout(() => this.playTone(600, 0.1, 'sine', 0.15), 80);
+setTimeout(() => this.playTone(800, 0.25, 'sine', 0.2), 160);
+}
+playDeath() { this.playTone(120, 0.3, 'sawtooth', 0.15); }
+playBossWarning() {
+this.playTone(90, 0.3, 'sawtooth', 0.25);
+setTimeout(() => this.playTone(110, 0.3, 'sawtooth', 0.25), 150);
+}
+playClick() { this.playTone(500, 0.05, 'sine', 0.1); }
+playShieldBlock() { this.playTone(750, 0.2, 'triangle', 0.25); }
+playHeal() { this.playTone(520, 0.2, 'sine', 0.15); }
+playIceSlam() { this.playTone(80, 0.4, 'square', 0.3); }
+}
+
+const audio = new SoundEngine();
+
+// --- 2. SAFE STORAGE SYSTEM ---
+const Storage = {
+get(key, defaultValue) {
+try {
+const val = localStorage.getItem('frozen_frenzy_' + key);
+return val !== null ? JSON.parse(val) : defaultValue;
+} catch(e) {
+return defaultValue;
+}
+},
+set(key, value) {
+try {
+localStorage.setItem('frozen_frenzy_' + key, JSON.stringify(value));
+} catch(e) {}
+}
+};
+
+// Global State
+let totalCoins = Storage.get('coins', 0);
+let metaUpgrades = Storage.get('meta', { hpLvl: 0, dmgLvl: 0, spdLvl: 0 });
+
+let canvas = document.getElementById('gameCanvas');
+let ctx = canvas.getContext('2d');
+
+let gameState = 'MENU'; // MENU, PLAYING, UPGRADE_MENU, GAMEOVER, VICTORY, TRANSITION
+let currentArea = 1;
+let currentRoom = 1;
+let gameTime = 0;
+let totalKills = 0;
+let coinsEarnedThisRun = 0;
+
+let keys = {};
+let touchInput = { x: 0, y: 0, active: false };
+let joystickActive = false;
+let joystickPos = { x: 65, y: 65 };
+
+// Camera Shake System
+let cameraShake = 0;
+function addCameraShake(amount) {
+cameraShake = Math.max(cameraShake, amount);
+}
+
+// Dynamic Canvas Resize
+function resizeCanvas() {
+if (!canvas) return;
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+
+// --- 3. UPGRADES DEFINITION ---
+const UPGRADES_LIST = [
+{ id: 'FROZEN_FISH', name: 'Frozen Fish', icon: '❄️', desc: 'Serangan memberikan efek slow frost.', maxLevel: 3 },
+{ id: 'DOUBLE_FISH', name: 'Twin Salmon', icon: '🐟', desc: 'Melempar lebih banyak ikan sekaligus.', maxLevel: 3 },
+{ id: 'HEAVY_FISH', name: 'Heavy Trout', icon: '🔨', desc: 'Meningkatkan Damage & knockback.', maxLevel: 3 },
+{ id: 'RAPID_FISH', name: 'Rapid Tuna', icon: '⚡', desc: 'Meningkatkan kecepatan lemparan ikan.', maxLevel: 3 },
+{ id: 'PIERCING_FISH', name: 'Drill Mackerel', icon: '🎯', desc: 'Ikan menembus musuh tambahan.', maxLevel: 3 },
+{ id: 'BOUNCING_FISH', name: 'Ricochet Cod', icon: '🔄', desc: 'Ikan memantul ke musuh sekitarnya.', maxLevel: 3 },
+{ id: 'ICE_BURST', name: 'Ice Burst', icon: '💥', desc: 'Musuh tewas meledak memicu serpihan es.', maxLevel: 3 },
+{ id: 'PET_COMPANION', name: 'Baby Penguin', icon: '🐧', desc: 'Penguin kecil membantu menembak ikan.', maxLevel: 3 },
+{ id: 'FROST_SHIELD', name: 'Frost Shield', icon: '🛡️', desc: 'Perisai es menyerap 1 hit (Cooldown otomatis).', maxLevel: 3 },
+{ id: 'HEALTH_REGROWTH', name: 'Health Regrowth', icon: '💚', desc: 'Memulihkan % Max HP setiap room selesai.', maxLevel: 3 }
+];
+
+// --- 4. PLAYER CLASS ---
+class Player {
+constructor() {
+this.reset();
+}
+
+reset() {
+this.x = 0;
+this.y = 0;
+this.radius = 18;
+
+// Base + Meta Upgrades
+this.maxHp = 100 + ((metaUpgrades.hpLvl || 0) * 15);
+this.hp = this.maxHp;
+this.baseDamage = 25 + ((metaUpgrades.dmgLvl || 0) * 5);
+this.speed = 3.4 + ((metaUpgrades.spdLvl || 0) * 0.3);
+
+this.attackCooldown = 0.55;
+this.attackTimer = 0;
+
+// Track level of each upgrade (1..3)
+this.upgradeLevels = {};
+
+// Passive states
+this.hasPet = false;
+this.petTimer = 0;
+this.petX = 0;
+this.petY = 0;
+
+this.hasShield = false;
+this.shieldActive = false;
+this.shieldCooldown = 0;
+
+this.healthRegrowth = false;
+
+// Visual Bobbing & Direction
+this.animTimer = 0;
+this.squashX = 1;
+this.squashY = 1;
+this.facingRight = true;
+}
+
+update(dt) {
+let moveX = 0;
+let moveY = 0;
+
+if (keys['w'] || keys['arrowup']) moveY -= 1;
+if (keys['s'] || keys['arrowdown']) moveY += 1;
+if (keys['a'] || keys['arrowleft']) moveX -= 1;
+if (keys['d'] || keys['arrowright']) moveX += 1;
+
+if (touchInput.active) {
+moveX = touchInput.x;
+moveY = touchInput.y;
+}
+
+let mag = Math.hypot(moveX, moveY);
+if (mag > 0) {
+moveX /= mag;
+moveY /= mag;
+this.x += moveX * this.speed * 60 * dt;
+this.y += moveY * this.speed * 60 * dt;
+
+this.animTimer += dt * 10;
+this.squashX = 1 + Math.sin(this.animTimer) * 0.08;
+this.squashY = 1 - Math.sin(this.animTimer) * 0.08;
+
+if (moveX !== 0) this.facingRight = moveX > 0;
+} else {
+this.squashX = 1;
+this.squashY = 1;
+}
+
+const boundary = 750;
+this.x = Math.max(-boundary, Math.min(boundary, this.x));
+this.y = Math.max(-boundary, Math.min(boundary, this.y));
+
+// 1. Frost Shield Recharge
+if (this.hasShield && !this.shieldActive) {
+this.shieldCooldown -= dt;
+if (this.shieldCooldown <= 0) {
+this.shieldActive = true;
+try { audio.playShieldBlock(); } catch(e) {}
+spawnFloatingText(this.x, this.y - 35, 'SHIELD READY!', '#38bdf8', false);
+}
+}
+
+// 2. Pet Companion Logic & Shooting
+if (this.hasPet) {
+let targetPetX = this.x - (this.facingRight ? 35 : -35);
+let targetPetY = this.y - 15;
+this.petX += (targetPetX - this.petX) * 0.1;
+this.petY += (targetPetY - this.petY) * 0.1;
+
+let petLvl = this.upgradeLevels['PET_COMPANION'] || 1;
+let interval = petLvl >= 3 ? 0.7 : (petLvl === 2 ? 0.9 : 1.5);
+this.petTimer -= dt;
+if (this.petTimer <= 0) {
+this.petTimer = interval;
+
+let nearestEnemy = getNearestEnemy(this.petX, this.petY, 350);
+if (nearestEnemy) {
+let angle = Math.atan2(nearestEnemy.y - this.petY, nearestEnemy.x - this.petX);
+let petProj = new FishProjectile(this.petX, this.petY, angle, this, true);
+projectiles.push(petProj);
+try { audio.playThrow(); } catch(e) {}
+
+if (petLvl >= 3) {
+setTimeout(() => {
+if (nearestEnemy && nearestEnemy.hp > 0 && gameState === 'PLAYING') {
+let angle2 = Math.atan2(nearestEnemy.y - this.petY, nearestEnemy.x - this.petX);
+let petProj2 = new FishProjectile(this.petX, this.petY, angle2, this, true);
+projectiles.push(petProj2);
+}
+}, 120);
+}
+}
+}
+}
+
+// Auto Attack Logic
+this.attackTimer -= dt;
+if (this.attackTimer <= 0) {
+let target = getNearestEnemy(this.x, this.y, 400);
+if (target) {
+this.shoot(target);
+let rapidLvl = this.upgradeLevels['RAPID_FISH'] || 0;
+let cdMult = 1.0;
+if (rapidLvl === 1) cdMult = 0.85;
+if (rapidLvl === 2) cdMult = 0.70;
+if (rapidLvl >= 3) cdMult = 0.55;
+this.attackTimer = this.attackCooldown * cdMult;
+}
+}
+}
+
+shoot(target) {
+try { audio.playThrow(); } catch(e) {}
+let baseAngle = Math.atan2(target.y - this.y, target.x - this.x);
+
+let doubleLvl = this.upgradeLevels['DOUBLE_FISH'] || 0;
+let count = 1;
+if (doubleLvl === 1) count = 2;
+if (doubleLvl === 2) count = 3;
+if (doubleLvl >= 3) count = 4;
+
+if (count === 1) {
+projectiles.push(new FishProjectile(this.x, this.y, baseAngle, this));
+} else {
+let spread = 0.22;
+let startAngle = baseAngle - (spread * (count - 1)) / 2;
+for (let i = 0; i < count; i++) {
+projectiles.push(new FishProjectile(this.x, this.y, startAngle + (i * spread), this));
+}
+}
+}
+
+takeDamage(amount) {
+if (this.shieldActive) {
+this.shieldActive = false;
+let shieldLvl = this.upgradeLevels['FROST_SHIELD'] || 1;
+this.shieldCooldown = (shieldLvl === 3) ? 6 : (shieldLvl === 2 ? 10 : 15);
+
+spawnParticles(this.x, this.y, '#38bdf8', 18);
+spawnFloatingText(this.x, this.y - 35, 'BLOCKED!', '#38bdf8', true);
+try { audio.playShieldBlock(); } catch(e) {}
+return;
+}
+
+this.hp -= amount;
+addCameraShake(3);
+try { audio.playHit(); } catch(e) {}
+spawnParticles(this.x, this.y, '#ef4444', 10);
+spawnFloatingText(this.x, this.y - 25, `-${Math.round(amount)}`, '#ef4444');
+
+updateHUD();
+
+if (this.hp <= 0) {
+this.hp = 0;
+triggerGameOver();
+}
+}
+
+draw() {
+ctx.save();
+ctx.translate(this.x, this.y);
+
+// Ground Shadow
+ctx.beginPath();
+ctx.ellipse(0, 16, 18, 8, 0, 0, Math.PI * 2);
+ctx.fillStyle = 'rgba(15, 23, 42, 0.4)';
+ctx.fill();
+
+// Active Frost Shield Pulsing Aura
+if (this.shieldActive) {
+ctx.save();
+let pulse = 1 + Math.sin(Date.now() * 0.006) * 0.08;
+ctx.scale(pulse, pulse);
+ctx.beginPath();
+ctx.arc(0, 0, 30, 0, Math.PI * 2);
+ctx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
+ctx.lineWidth = 3;
+ctx.setLineDash([6, 4]);
+ctx.stroke();
+ctx.fillStyle = 'rgba(56, 189, 248, 0.15)';
+ctx.fill();
+ctx.restore();
+}
+
+// Character Squash & Stretch
+ctx.scale((this.facingRight ? 1 : -1) * (this.squashX || 1), this.squashY || 1);
+
+// Feet
+ctx.fillStyle = '#f97316';
+ctx.beginPath();
+ctx.ellipse(-8, 14, 6, 3, 0, 0, Math.PI * 2);
+ctx.ellipse(8, 14, 6, 3, 0, 0, Math.PI * 2);
+ctx.fill();
+
+// Body
+let bodyGrad = ctx.createLinearGradient(-16, -20, 16, 16);
+bodyGrad.addColorStop(0, '#334155');
+bodyGrad.addColorStop(1, '#0f172a');
+ctx.fillStyle = bodyGrad;
+ctx.beginPath();
+ctx.ellipse(0, 0, 16, 18, 0, 0, Math.PI * 2);
+ctx.fill();
+
+// White Belly Volume
+ctx.fillStyle = '#f8fafc';
+ctx.beginPath();
+ctx.ellipse(3, 3, 10, 12, 0, 0, Math.PI * 2);
+ctx.fill();
+
+// Eye
+ctx.fillStyle = '#0f172a';
+ctx.beginPath();
+ctx.arc(6, -6, 2.5, 0, Math.PI * 2);
+ctx.fill();
+ctx.fillStyle = '#ffffff';
+ctx.beginPath();
+ctx.arc(7, -7, 1, 0, Math.PI * 2);
+ctx.fill();
+
+// Beak
+ctx.fillStyle = '#f97316';
+ctx.beginPath();
+ctx.moveTo(10, -3);
+ctx.lineTo(18, 0);
+ctx.lineTo(10, 3);
+ctx.closePath();
+ctx.fill();
+
+ctx.restore();
+
+// Pet Companion (World Space)
+if (this.hasPet) {
+ctx.save();
+ctx.translate(this.petX, this.petY);
+
+ctx.beginPath();
+ctx.ellipse(0, 10, 10, 4, 0, 0, Math.PI * 2);
+ctx.fillStyle = 'rgba(15, 23, 42, 0.3)';
+ctx.fill();
+
+ctx.fillStyle = '#38bdf8';
+ctx.beginPath();
+ctx.ellipse(0, 0, 10, 11, 0, 0, Math.PI * 2);
+ctx.fill();
+
+ctx.fillStyle = '#ffffff';
+ctx.beginPath();
+ctx.ellipse(2, 2, 6, 7, 0, 0, Math.PI * 2);
+ctx.fill();
+
+ctx.fillStyle = '#0f172a';
+ctx.beginPath();
+ctx.arc(4, -3, 1.5, 0, Math.PI * 2);
+ctx.fill();
+
+ctx.fillStyle = '#f97316';
+ctx.beginPath();
+ctx.moveTo(6, -1);
+ctx.lineTo(11, 1);
+ctx.lineTo(6, 3);
+ctx.closePath();
+ctx.fill();
+
+ctx.restore();
+}
+}
+}
+
+// --- 5. PROJECTILES & EFFECTS ---
+class FishProjectile {
+constructor(x, y, angle, owner, isPet = false) {
+this.x = x;
+this.y = y;
+this.angle = angle;
+this.speed = isPet ? 8 : 10;
+this.radius = isPet ? 8 : 11;
+this.owner = owner;
+this.isPet = isPet;
+
+let heavyLvl = owner.upgradeLevels['HEAVY_FISH'] || 0;
+this.heavyLvl = heavyLvl;
+this.heavy = heavyLvl > 0 && !isPet;
+
+if (isPet) {
+this.damage = owner.baseDamage * 0.5;
+} else {
+let heavyBonus = heavyLvl * 10; // Lv1: +10, Lv2: +20, Lv3: +30
+this.damage = owner.baseDamage + heavyBonus;
+}
+
+this.pierceCount = isPet ? 0 : (owner.upgradeLevels['PIERCING_FISH'] || 0);
+this.bounceCount = isPet ? 0 : (owner.upgradeLevels['BOUNCING_FISH'] || 0);
+this.frozen = owner.upgradeLevels['FROZEN_FISH'] > 0 && !isPet;
+
+this.lifetime = 2.5;
+this.hitEnemies = new Set();
+}
+
+update(dt) {
+this.lifetime -= dt;
+this.x += Math.cos(this.angle) * this.speed * 60 * dt;
+this.y += Math.sin(this.angle) * this.speed * 60 * dt;
+
+// Trail Particles
+if (Math.random() < 0.6) {
+particles.push(new Particle(
+this.x, this.y,
+this.frozen ? '#38bdf8' : (this.heavy ? '#f97316' : '#cbd5e1'),
+Math.random() * 3 + 1, 0.2
+));
+}
+
+for (let enemy of enemies) {
+if (this.hitEnemies.has(enemy.id)) continue;
+let dist = Math.hypot(enemy.x - this.x, enemy.y - this.y);
+if (dist < enemy.radius + this.radius) {
+this.hitEnemies.add(enemy.id);
+
+let knockbackVal = this.heavy ? (3 + this.heavyLvl * 2.5) : 3;
+enemy.takeDamage(this.damage, this.angle, knockbackVal, this.frozen, this.heavy, this.heavyLvl);
+
+if (this.bounceCount > 0) {
+this.bounceCount--;
+let nextTarget = getNearestEnemyExcept(this.x, this.y, 280, enemy.id);
+if (nextTarget) {
+let oldX = this.x, oldY = this.y;
+this.angle = Math.atan2(nextTarget.y - this.y, nextTarget.x - this.x);
+effects.push(new ArcEffect(oldX, oldY, nextTarget.x, nextTarget.y, '#38bdf8'));
+return;
+}
+}
+
+if (this.pierceCount > 0) {
+this.pierceCount--;
+} else {
+this.lifetime = 0;
+break;
+}
+}
+}
+}
+
+draw() {
+ctx.save();
+ctx.translate(this.x, this.y);
+ctx.rotate(this.angle + Math.PI / 4);
+
+ctx.beginPath();
+ctx.arc(0, 0, this.radius + 2, 0, Math.PI * 2);
+ctx.fillStyle = this.frozen ? 'rgba(56, 189, 248, 0.4)' : (this.heavy ? 'rgba(249, 115, 22, 0.4)' : 'rgba(251, 146, 60, 0.3)');
+ctx.fill();
+
+ctx.fillStyle = this.frozen ? '#0284c7' : (this.heavy ? '#c2410c' : '#ea580c');
+ctx.beginPath();
+ctx.ellipse(0, 0, this.radius + 2, this.radius - 3, 0, 0, Math.PI * 2);
+ctx.fill();
+
+ctx.fillStyle = '#f97316';
+ctx.beginPath();
+ctx.moveTo(-this.radius, 0);
+ctx.lineTo(-this.radius - 6, -5);
+ctx.lineTo(-this.radius - 6, 5);
+ctx.closePath();
+ctx.fill();
+
+ctx.restore();
+}
+}
+
+// --- 6. ENEMIES ENGINE ---
+class Enemy {
+constructor(x, y, type) {
+this.id = Math.random().toString();
+this.x = x;
+this.y = y;
+this.type = type;
+
+let areaHpMult = currentArea === 2 ? 1.4 : 1.0;
+let areaDmgMult = currentArea === 2 ? 1.25 : 1.0;
+
+if (type === 'FOX') {
+this.radius = 16;
+this.speed = 2.4;
+this.maxHp = (45 + (currentRoom * 8)) * areaHpMult;
+this.damage = 10 * areaDmgMult;
+this.color = '#f97316';
+} else if (type === 'WOLF') {
+this.radius = 18;
+this.speed = 2.0;
+this.maxHp = (80 + (currentRoom * 12)) * areaHpMult;
+this.damage = 14 * areaDmgMult;
+this.color = '#64748b';
+this.charging = false;
+this.chargeTimer = 0;
+} else if (type === 'SEAL') {
+this.radius = 22;
+this.speed = 1.4;
+this.maxHp = (130 + (currentRoom * 18)) * areaHpMult;
+this.damage = 18 * areaDmgMult;
+this.color = '#38bdf8';
+} else if (type === 'WALRUS') {
+this.radius = 28;
+this.speed = 1.0;
+this.maxHp = (240 + (currentRoom * 25)) * areaHpMult;
+this.damage = 24 * areaDmgMult;
+this.color = '#475569';
+} else if (type === 'BOSS') {
+this.radius = 45;
+this.speed = 1.4;
+this.maxHp = (currentArea === 2 ? 1800 : 1200);
+this.damage = 28 * areaDmgMult;
+this.color = '#f8fafc';
+this.isBoss = true;
+this.phase2 = false;
+this.attackTimer = 2.5;
+this.hazardTimer = 4.0;
+}
+
+this.hp = this.maxHp;
+this.slowTimer = 0;
+this.slowAmount = 0;
+this.flashTimer = 0;
+}
+
+update(dt) {
+if (this.flashTimer > 0) this.flashTimer -= dt;
+
+let currentSpeed = this.speed;
+if (this.slowTimer > 0) {
+this.slowTimer -= dt;
+currentSpeed *= (1 - this.slowAmount);
+}
+
+let angle = Math.atan2(player.y - this.y, player.x - this.x);
+
+// Wolf Charge Behavior
+if (this.type === 'WOLF') {
+this.chargeTimer += dt;
+if (this.chargeTimer > 3.0) {
+if (!this.charging) {
+this.charging = true;
+telegraphs.push(new TelegraphLine(this.x, this.y, player.x, player.y, 0.6));
+}
+if (this.chargeTimer > 3.8) {
+this.chargeTimer = 0;
+this.charging = false;
+}
+}
+if (this.charging) currentSpeed *= 2.2;
+}
+
+// Boss AI & Attacks
+if (this.isBoss) {
+if (this.hp < this.maxHp * 0.5 && !this.phase2) {
+this.phase2 = true;
+this.speed *= 1.3;
+addCameraShake(8);
+try { audio.playBossWarning(); } catch(e) {}
+spawnFloatingText(this.x, this.y - 50, 'ENRAGED!', '#ef4444', true);
+}
+
+this.attackTimer -= dt;
+if (this.attackTimer <= 0) {
+this.attackTimer = this.phase2 ? 2.0 : 3.2;
+
+let slamX = player.x;
+let slamY = player.y;
+telegraphs.push(new TelegraphCircle(slamX, slamY, 110, 0.8, () => {
+try { audio.playIceSlam(); } catch(e) {}
+addCameraShake(7);
+effects.push(new ImpactRing(slamX, slamY, 110, '#38bdf8'));
+spawnParticles(slamX, slamY, '#38bdf8', 25);
+
+let dist = Math.hypot(player.x - slamX, player.y - slamY);
+if (dist < 110) {
+player.takeDamage(this.damage * 1.3);
+}
+}));
+}
+
+if (this.phase2) {
+this.hazardTimer -= dt;
+if (this.hazardTimer <= 0) {
+this.hazardTimer = 4.5;
+for (let i = 0; i < 3; i++) {
+let hzX = player.x + (Math.random() - 0.5) * 220;
+let hzY = player.y + (Math.random() - 0.5) * 220;
+telegraphs.push(new TelegraphCircle(hzX, hzY, 55, 1.2, () => {
+effects.push(new ImpactRing(hzX, hzY, 55, '#0284c7'));
+spawnParticles(hzX, hzY, '#0284c7', 15);
+if (Math.hypot(player.x - hzX, player.y - hzY) < 55) {
+player.takeDamage(this.damage * 0.8);
+}
+}));
+}
+}
+}
+}
+
+this.x += Math.cos(angle) * currentSpeed * 60 * dt;
+this.y += Math.sin(angle) * currentSpeed * 60 * dt;
+
+let dist = Math.hypot(player.x - this.x, player.y - this.y);
+if (dist < player.radius + this.radius) {
+player.takeDamage(this.damage * dt * 1.8);
+}
+}
+
+takeDamage(incomingDamage, angle, knockback, isFrozen, isHeavy, heavyLvl) {
+let isCrit = Math.random() < 0.20; // 20% Crit Chance
+let finalDamage = incomingDamage * (isCrit ? 1.5 : 1.0);
+
+this.hp -= finalDamage;
+this.flashTimer = 0.12;
+
+if (isCrit) {
+try { audio.playCrit(); } catch(e) {}
+addCameraShake(3.5);
+spawnFloatingText(this.x, this.y - 25, `${Math.round(finalDamage)}!`, '#f59e0b', true);
+spawnParticles(this.x, this.y, '#f59e0b', 12);
+} else {
+try { audio.playHit(); } catch(e) {}
+spawnFloatingText(this.x, this.y - 20, `${Math.round(finalDamage)}`, '#ffffff', false);
+spawnParticles(this.x, this.y, this.color, 6);
+}
+
+if (isFrozen) {
+let frozenLvl = player.upgradeLevels['FROZEN_FISH'] || 1;
+if (frozenLvl === 1) { this.slowTimer = 2.0; this.slowAmount = 0.25; }
+else if (frozenLvl === 2) { this.slowTimer = 2.5; this.slowAmount = 0.35; }
+else if (frozenLvl >= 3) {
+this.slowTimer = 3.0; this.slowAmount = 0.45;
+spawnParticles(this.x, this.y, '#38bdf8', 8);
+}
+}
+
+if (isHeavy) {
+addCameraShake(heavyLvl >= 3 ? 4 : 2);
+if (heavyLvl >= 3) {
+effects.push(new ImpactRing(this.x, this.y, 40, '#f97316'));
+}
+}
+
+this.x += Math.cos(angle) * knockback;
+this.y += Math.sin(angle) * knockback;
+
+if (this.hp <= 0) {
+this.die();
+}
+}
+
+die() {
+totalKills++;
+coinsEarnedThisRun += Math.floor(Math.random() * 3) + 1;
+try { audio.playDeath(); } catch(e) {}
+spawnParticles(this.x, this.y, this.color, 15);
+
+let burstLvl = player.upgradeLevels['ICE_BURST'] || 0;
+if (burstLvl > 0) {
+addCameraShake(2.5);
+let shardCount = burstLvl === 3 ? 9 : (burstLvl === 2 ? 6 : 3);
+for (let i = 0; i < shardCount; i++) {
+let shardAngle = (Math.PI * 2 / shardCount) * i;
+let proj = new FishProjectile(this.x, this.y, shardAngle, player, true);
+proj.damage = player.baseDamage * 0.4;
+projectiles.push(proj);
+}
+}
+}
+
+draw() {
+ctx.save();
+ctx.translate(this.x, this.y);
+
+// Ground Shadow
+ctx.beginPath();
+ctx.ellipse(0, this.radius * 0.7, this.radius, this.radius * 0.4, 0, 0, Math.PI * 2);
+ctx.fillStyle = 'rgba(15, 23, 42, 0.4)';
+ctx.fill();
+
+if (this.slowTimer > 0) {
+ctx.beginPath();
+ctx.arc(0, 0, this.radius + 6, 0, Math.PI * 2);
+ctx.strokeStyle = '#38bdf8';
+ctx.lineWidth = 2;
+ctx.stroke();
+}
+
+let bodyColor = this.flashTimer > 0 ? '#ffffff' : this.color;
+
+// --- STYLIZED ANIMAL SILHOUETTES ---
+if (this.type === 'FOX') {
+ctx.fillStyle = '#ea580c';
+ctx.beginPath();
+ctx.moveTo(-12, -8); ctx.lineTo(-6, -20); ctx.lineTo(0, -8); ctx.closePath(); ctx.fill();
+ctx.beginPath();
+ctx.moveTo(0, -8); ctx.lineTo(6, -20); ctx.lineTo(12, -8); ctx.closePath(); ctx.fill();
+
+ctx.fillStyle = bodyColor;
+ctx.beginPath();
+ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+ctx.fill();
+
+ctx.fillStyle = '#f8fafc';
+ctx.beginPath();
+ctx.ellipse(0, 4, 8, 5, 0, 0, Math.PI * 2);
+ctx.fill();
+
+} else if (this.type === 'WOLF') {
+ctx.fillStyle = '#475569';
+ctx.beginPath();
+ctx.moveTo(-14, -8); ctx.lineTo(-8, -22); ctx.lineTo(-2, -8); ctx.closePath(); ctx.fill();
+ctx.beginPath();
+ctx.moveTo(2, -8); ctx.lineTo(8, -22); ctx.lineTo(14, -8); ctx.closePath(); ctx.fill();
+
+ctx.fillStyle = bodyColor;
+ctx.beginPath();
+ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+ctx.fill();
+
+ctx.fillStyle = '#1e293b';
+ctx.beginPath();
+ctx.ellipse(0, 5, 7, 4, 0, 0, Math.PI * 2);
+ctx.fill();
+
+} else if (this.type === 'SEAL') {
+ctx.fillStyle = bodyColor;
+ctx.beginPath();
+ctx.ellipse(0, 0, this.radius + 4, this.radius - 2, 0, 0, Math.PI * 2);
+ctx.fill();
+
+ctx.fillStyle = '#0284c7';
+ctx.beginPath();
+ctx.ellipse(-this.radius, 6, 6, 3, Math.PI/4, 0, Math.PI * 2);
+ctx.ellipse(this.radius, 6, 6, 3, -Math.PI/4, 0, Math.PI * 2);
+ctx.fill();
+
+} else if (this.type === 'WALRUS') {
+ctx.fillStyle = bodyColor;
+ctx.beginPath();
+ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+ctx.fill();
+
+ctx.fillStyle = '#f8fafc';
+ctx.fillRect(-8, 6, 4, 12);
+ctx.fillRect(4, 6, 4, 12);
+
+} else if (this.isBoss) {
+ctx.beginPath();
+ctx.arc(0, 0, this.radius + 8, 0, Math.PI * 2);
+ctx.strokeStyle = this.phase2 ? 'rgba(239, 68, 68, 0.6)' : 'rgba(56, 189, 248, 0.5)';
+ctx.lineWidth = 4;
+ctx.stroke();
+
+ctx.fillStyle = '#e2e8f0';
+ctx.beginPath();
+ctx.arc(-26, -26, 12, 0, Math.PI * 2);
+ctx.arc(26, -26, 12, 0, Math.PI * 2);
+ctx.fill();
+
+ctx.fillStyle = bodyColor;
+ctx.beginPath();
+ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+ctx.fill();
+
+ctx.fillStyle = '#0f172a';
+ctx.beginPath();
+ctx.ellipse(0, 10, 10, 7, 0, 0, Math.PI * 2);
+ctx.fill();
+
+ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+ctx.fillRect(-50, -this.radius - 25, 100, 10);
+ctx.fillStyle = this.phase2 ? '#ef4444' : '#38bdf8';
+ctx.fillRect(-48, -this.radius - 23, 96 * (this.hp / this.maxHp), 6);
+}
+
+ctx.restore();
+}
+}
+
+// --- 7. PARTICLES & VISUAL EFFECTS ENGINE ---
+let particles = [];
+let floatingTexts = [];
+let projectiles = [];
+let enemies = [];
+let telegraphs = [];
+let effects = [];
+
+class Particle {
+constructor(x, y, color, size, lifetime = 0.5) {
+this.x = x;
+this.y = y;
+this.color = color;
+this.size = size;
+this.lifetime = lifetime;
+this.maxLifetime = lifetime;
+this.vx = (Math.random() - 0.5) * 120;
+this.vy = (Math.random() - 0.5) * 120;
+}
+update(dt) {
+this.lifetime -= dt;
+this.x += this.vx * dt;
+this.y += this.vy * dt;
+}
+draw() {
+ctx.save();
+ctx.globalAlpha = Math.max(0, this.lifetime / this.maxLifetime);
+ctx.fillStyle = this.color;
+ctx.beginPath();
+ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+ctx.fill();
+ctx.restore();
+}
+}
+
+class FloatingText {
+constructor(x, y, text, color, isLarge = false) {
+this.x = x;
+this.y = y;
+this.text = text;
+this.color = color;
+this.isLarge = isLarge;
+this.lifetime = 0.8;
+}
+update(dt) {
+this.lifetime -= dt;
+this.y -= 25 * dt;
+}
+draw() {
+ctx.save();
+ctx.globalAlpha = Math.max(0, this.lifetime / 0.8);
+ctx.font = this.isLarge ? '900 20px "Fredoka One", cursive' : '700 14px "Nunito", sans-serif';
+ctx.fillStyle = this.color;
+ctx.textAlign = 'center';
+ctx.fillText(this.text, this.x, this.y);
+ctx.restore();
+}
+}
+
+class TelegraphCircle {
+constructor(x, y, radius, duration, onComplete) {
+this.x = x;
+this.y = y;
+this.radius = radius;
+this.duration = duration;
+this.timer = duration;
+this.onComplete = onComplete;
+}
+update(dt) {
+this.timer -= dt;
+if (this.timer <= 0) {
+if (this.onComplete) this.onComplete();
+}
+}
+draw() {
+let progress = 1 - (this.timer / this.duration);
+ctx.save();
+ctx.beginPath();
+ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+ctx.strokeStyle = 'rgba(239, 68, 68, 0.7)';
+ctx.lineWidth = 3;
+ctx.stroke();
+
+ctx.beginPath();
+ctx.arc(this.x, this.y, this.radius * progress, 0, Math.PI * 2);
+ctx.fillStyle = 'rgba(239, 68, 68, 0.25)';
+ctx.fill();
+ctx.restore();
+}
+}
+
+class TelegraphLine {
+constructor(x1, y1, x2, y2, duration) {
+this.x1 = x1; this.y1 = y1;
+this.x2 = x2; this.y2 = y2;
+this.timer = duration;
+this.duration = duration;
+}
+update(dt) { this.timer -= dt; }
+draw() {
+ctx.save();
+ctx.beginPath();
+ctx.moveTo(this.x1, this.y1);
+ctx.lineTo(this.x2, this.y2);
+ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)';
+ctx.lineWidth = 4;
+ctx.setLineDash([8, 6]);
+ctx.stroke();
+ctx.restore();
+}
+}
+
+class ImpactRing {
+constructor(x, y, maxRadius, color) {
+this.x = x; this.y = y;
+this.maxRadius = maxRadius;
+this.color = color;
+this.radius = 5;
+this.lifetime = 0.35;
+this.maxLifetime = 0.35;
+}
+update(dt) {
+this.lifetime -= dt;
+this.radius += (this.maxRadius / this.maxLifetime) * dt;
+}
+draw() {
+ctx.save();
+ctx.beginPath();
+ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+ctx.strokeStyle = this.color;
+ctx.lineWidth = 3;
+ctx.globalAlpha = Math.max(0, this.lifetime / this.maxLifetime);
+ctx.stroke();
+ctx.restore();
+}
+}
+
+class ArcEffect {
+constructor(x1, y1, x2, y2, color) {
+this.x1 = x1; this.y1 = y1;
+this.x2 = x2; this.y2 = y2;
+this.color = color;
+this.lifetime = 0.2;
+}
+update(dt) { this.lifetime -= dt; }
+draw() {
+ctx.save();
+ctx.beginPath();
+ctx.moveTo(this.x1, this.y1);
+ctx.lineTo(this.x2, this.y2);
+ctx.strokeStyle = this.color;
+ctx.lineWidth = 3;
+ctx.globalAlpha = Math.max(0, this.lifetime / 0.2);
+ctx.stroke();
+ctx.restore();
+}
+}
+
+function spawnParticles(x, y, color, count) {
+if (particles.length > 120) return;
+for (let i = 0; i < count; i++) {
+particles.push(new Particle(x, y, color, Math.random() * 4 + 2, 0.4));
+}
+}
+
+function spawnFloatingText(x, y, text, color, isLarge = false) {
+floatingTexts.push(new FloatingText(x, y, text, color, isLarge));
+}
+
+function getNearestEnemy(x, y, maxDist) {
+let nearest = null, minDist = maxDist;
+for (let enemy of enemies) {
+let dist = Math.hypot(enemy.x - x, enemy.y - y);
+if (dist < minDist) { minDist = dist; nearest = enemy; }
+}
+return nearest;
+}
+
+function getNearestEnemyExcept(x, y, maxDist, exceptId) {
+let nearest = null, minDist = maxDist;
+for (let enemy of enemies) {
+if (enemy.id === exceptId) continue;
+let dist = Math.hypot(enemy.x - x, enemy.y - y);
+if (dist < minDist) { minDist = dist; nearest = enemy; }
+}
+return nearest;
+}
+
+// --- 8. ROOM & PROGRESSION LOGIC ---
+let player = new Player();
+
+function spawnEnemyAtSafeDistance(type) {
+let angle = Math.random() * Math.PI * 2;
+let dist = 240 + Math.random() * 160;
+let spawnX = player.x + Math.cos(angle) * dist;
+let spawnY = player.y + Math.sin(angle) * dist;
+
+spawnX = Math.max(-700, Math.min(700, spawnX));
+spawnY = Math.max(-700, Math.min(700, spawnY));
+enemies.push(new Enemy(spawnX, spawnY, type));
+}
+
+function loadRoom(area, room) {
+enemies = [];
+projectiles = [];
+telegraphs = [];
+effects = [];
+
+document.getElementById('area-title').innerText = area === 1 ? 'AREA 1: SNOWY SHORE' : 'AREA 2: FROZEN TUNDRA';
+document.getElementById('room-title').innerText = `ROOM ${room}`;
+
+if (room === 6) {
+try { audio.playBossWarning(); } catch(e) {}
+enemies.push(new Enemy(0, -250, 'BOSS'));
+} else {
+let count = 3 + Math.floor(room * 0.8);
+for (let i = 0; i < count; i++) {
+let pool = ['FOX'];
+if (room >= 2) pool.push('SEAL');
+if (room >= 3) pool.push('WOLF');
+if (room >= 4) pool.push('WALRUS');
+
+let selectedType = pool[Math.floor(Math.random() * pool.length)];
+spawnEnemyAtSafeDistance(selectedType);
+}
+}
+}
+
+function checkRoomClear() {
+if (gameState === 'PLAYING' && enemies.length === 0) {
+gameState = 'UPGRADE_MENU';
+showUpgradeModal();
+}
+}
+
+function advanceToNextRoom() {
+if (player.healthRegrowth && player.hp > 0) {
+let regrowthLvl = player.upgradeLevels['HEALTH_REGROWTH'] || 1;
+let pct = regrowthLvl === 3 ? 0.15 : (regrowthLvl === 2 ? 0.10 : 0.05);
+let healAmount = player.maxHp * pct;
+player.hp = Math.min(player.maxHp, player.hp + healAmount);
+
+spawnParticles(player.x, player.y, '#22c55e', 18);
+spawnFloatingText(player.x, player.y - 35, `+${Math.round(healAmount)} HP`, '#22c55e', true);
+try { audio.playHeal(); } catch(e) {}
+updateHUD();
+}
+
+currentRoom++;
+if (currentRoom > 6) {
+if (currentArea === 1) {
+currentArea = 2;
+currentRoom = 1;
+
+gameState = 'TRANSITION';
+let transModal = document.getElementById('area-transition-modal');
+transModal.classList.remove('hidden');
+
+setTimeout(() => {
+transModal.classList.add('hidden');
+loadRoom(currentArea, currentRoom);
+gameState = 'PLAYING';
+}, 2200);
+
+} else {
+triggerVictory();
+}
+} else {
+loadRoom(currentArea, currentRoom);
+gameState = 'PLAYING';
+}
+}
+
+// --- 9. UPGRADE SELECTION MODAL ---
+function showUpgradeModal() {
+let container = document.getElementById('upgrade-cards');
+container.innerHTML = '';
+
+let availableUpgrades = UPGRADES_LIST.filter(item => {
+let currentLvl = player.upgradeLevels[item.id] || 0;
+return currentLvl < item.maxLevel;
+});
+
+availableUpgrades.sort(() => 0.5 - Math.random());
+let selectedCards = availableUpgrades.slice(0, 3);
+
+selectedCards.forEach(upg => {
+let currentLvl = player.upgradeLevels[upg.id] || 0;
+let nextLvl = currentLvl + 1;
+
+let card = document.createElement('div');
+card.className = "glass-panel p-5 rounded-2xl border-2 border-sky-400/30 hover:border-sky-400 cursor-pointer text-left btn-action flex flex-col justify-between";
+card.innerHTML = `<div> <div class="flex justify-between items-center mb-2"> <span class="text-4xl">${upg.icon}</span> <span class="text-xs font-bold px-2 py-1 bg-sky-950 text-sky-400 border border-sky-500/40 rounded-lg">Lvl ${nextLvl} / ${upg.maxLevel}</span> </div> <h3 class="font-fredoka text-lg text-amber-300 mb-1">${upg.name}</h3> <p class="text-xs text-slate-300">${upg.desc}</p> </div> <button class="mt-4 w-full py-2 bg-sky-600 hover:bg-sky-500 text-white font-fredoka rounded-xl text-sm">SELECT</button>`;
+card.onclick = () => {
+applyUpgrade(upg.id);
+document.getElementById('upgrade-modal').classList.add('hidden');
+advanceToNextRoom();
+};
+container.appendChild(card);
+});
+
+document.getElementById('upgrade-modal').classList.remove('hidden');
+}
+
+function applyUpgrade(id) {
+try { audio.playClick(); } catch(e) {}
+player.upgradeLevels[id] = (player.upgradeLevels[id] || 0) + 1;
+
+switch(id) {
+case 'PET_COMPANION':
+player.hasPet = true;
+player.petX = player.x - 35;
+player.petY = player.y - 15;
+break;
+case 'FROST_SHIELD':
+player.hasShield = true;
+player.shieldActive = true;
+break;
+case 'HEALTH_REGROWTH':
+player.healthRegrowth = true;
+break;
+}
+}
+
+// --- 10. UI & GAME CONTROLLERS ---
+function updateHUD() {
+document.getElementById('hp-text').innerText = `${Math.ceil(player.hp)} / ${player.maxHp}`;
+document.getElementById('hp-bar').style.width = `${Math.max(0, (player.hp / player.maxHp) * 100)}%`;
+document.getElementById('hud-coins').innerText = coinsEarnedThisRun;
+document.getElementById('menu-coins').innerText = totalCoins;
+document.getElementById('shop-coins').innerText = totalCoins;
+}
+
+function updateShopUI() {
+document.getElementById('shop-hp-lvl').innerText = `Lvl ${metaUpgrades.hpLvl || 0}`;
+document.getElementById('shop-dmg-lvl').innerText = `Lvl ${metaUpgrades.dmgLvl || 0}`;
+document.getElementById('shop-spd-lvl').innerText = `Lvl ${metaUpgrades.spdLvl || 0}`;
+document.getElementById('shop-coins').innerText = totalCoins;
+}
+
+function triggerGameOver() {
+gameState = 'GAMEOVER';
+totalCoins += coinsEarnedThisRun;
+Storage.set('coins', totalCoins);
+
+document.getElementById('go-room').innerText = `Area ${currentArea} - Room ${currentRoom}`;
+document.getElementById('go-kills').innerText = totalKills;
+document.getElementById('go-coins').innerText = `🐟 ${coinsEarnedThisRun}`;
+document.getElementById('hud-overlay').classList.add('hidden');
+document.getElementById('gameover-modal').classList.remove('hidden');
+}
+
+function triggerVictory() {
+gameState = 'VICTORY';
+totalCoins += coinsEarnedThisRun;
+Storage.set('coins', totalCoins);
+
+document.getElementById('vic-coins').innerText = `🐟 ${coinsEarnedThisRun}`;
+document.getElementById('vic-kills').innerText = totalKills;
+document.getElementById('hud-overlay').classList.add('hidden');
+document.getElementById('victory-modal').classList.remove('hidden');
+}
+
+// Global UI Button Actions
+function startGame() {
+try { audio.init(); audio.playClick(); } catch(e) {}
+
+document.getElementById('main-menu').classList.add('hidden');
+document.getElementById('hud-overlay').classList.remove('hidden');
+
+currentArea = 1;
+currentRoom = 1;
+totalKills = 0;
+coinsEarnedThisRun = 0;
+player.reset();
+updateHUD();
+loadRoom(currentArea, currentRoom);
+gameState = 'PLAYING';
+
+window.focus();
+}
+
+function openShop() {
+try { audio.init(); audio.playClick(); } catch(e) {}
+updateShopUI();
+document.getElementById('main-menu').classList.add('hidden');
+document.getElementById('shop-modal').classList.remove('hidden');
+}
+
+function closeShop() {
+try { audio.init(); audio.playClick(); } catch(e) {}
+document.getElementById('shop-modal').classList.add('hidden');
+document.getElementById('main-menu').classList.remove('hidden');
+}
+
+function buyHP() {
+if (totalCoins >= 50) {
+totalCoins -= 50;
+metaUpgrades.hpLvl = (metaUpgrades.hpLvl || 0) + 1;
+Storage.set('coins', totalCoins);
+Storage.set('meta', metaUpgrades);
+try { audio.playLevelUp(); } catch(e) {}
+updateShopUI();
+}
+}
+
+function buyDamage() {
+if (totalCoins >= 50) {
+totalCoins -= 50;
+metaUpgrades.dmgLvl = (metaUpgrades.dmgLvl || 0) + 1;
+Storage.set('coins', totalCoins);
+Storage.set('meta', metaUpgrades);
+try { audio.playLevelUp(); } catch(e) {}
+updateShopUI();
+}
+}
+
+function buySpeed() {
+if (totalCoins >= 50) {
+totalCoins -= 50;
+metaUpgrades.spdLvl = (metaUpgrades.spdLvl || 0) + 1;
+Storage.set('coins', totalCoins);
+Storage.set('meta', metaUpgrades);
+try { audio.playLevelUp(); } catch(e) {}
+updateShopUI();
+}
+}
+
+function retryGame() {
+try { audio.init(); audio.playClick(); } catch(e) {}
+document.getElementById('gameover-modal').classList.add('hidden');
+startGame();
+}
+
+function continueVictory() {
+try { audio.init(); audio.playClick(); } catch(e) {}
+document.getElementById('victory-modal').classList.add('hidden');
+document.getElementById('main-menu').classList.remove('hidden');
+updateHUD();
+}
+
+function toggleSound() {
+audio.enabled = !audio.enabled;
+document.getElementById('btn-sound').innerText = audio.enabled ? '🔊' : '🔇';
+}
+
+// --- 11. MAIN RENDER LOOP ---
+let lastTime = performance.now();
+let gameLoopRunning = false;
+
+function gameLoop(now) {
+if (!now) now = performance.now();
+let dt = (now - lastTime) / 1000;
+if (isNaN(dt) || dt <= 0 || dt > 0.1) dt = 0.016;
+lastTime = now;
+
+if (gameState === 'PLAYING') {
+gameTime += dt;
+
+player.update(dt);
+
+for (let i = projectiles.length - 1; i >= 0; i--) {
+projectiles[i].update(dt);
+if (projectiles[i].lifetime <= 0) projectiles.splice(i, 1);
+}
+
+for (let i = enemies.length - 1; i >= 0; i--) {
+enemies[i].update(dt);
+if (enemies[i].hp <= 0) enemies.splice(i, 1);
+}
+
+for (let i = telegraphs.length - 1; i >= 0; i--) {
+telegraphs[i].update(dt);
+if (telegraphs[i].timer <= 0) telegraphs.splice(i, 1);
+}
+
+for (let i = effects.length - 1; i >= 0; i--) {
+effects[i].update(dt);
+if (effects[i].lifetime <= 0) effects.splice(i, 1);
+}
+
+for (let i = particles.length - 1; i >= 0; i--) {
+particles[i].update(dt);
+if (particles[i].lifetime <= 0) particles.splice(i, 1);
+}
+
+for (let i = floatingTexts.length - 1; i >= 0; i--) {
+floatingTexts[i].update(dt);
+if (floatingTexts[i].lifetime <= 0) floatingTexts.splice(i, 1);
+}
+
+checkRoomClear();
+}
+
+let shakeX = 0, shakeY = 0;
+if (cameraShake > 0) {
+shakeX = (Math.random() - 0.5) * cameraShake;
+shakeY = (Math.random() - 0.5) * cameraShake;
+cameraShake = Math.max(0, cameraShake - dt * 25);
+}
+
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+ctx.save();
+ctx.translate(canvas.width / 2 - player.x + shakeX, canvas.height / 2 - player.y + shakeY);
+
+ctx.fillStyle = currentArea === 1 ? '#0f172a' : '#090d16';
+ctx.fillRect(-800, -800, 1600, 1600);
+
+ctx.strokeStyle = currentArea === 1 ? 'rgba(56, 189, 248, 0.08)' : 'rgba(147, 197, 253, 0.05)';
+ctx.lineWidth = 2;
+for (let x = -800; x <= 800; x += 100) {
+ctx.beginPath(); ctx.moveTo(x, -800); ctx.lineTo(x, 800); ctx.stroke();
+}
+for (let y = -800; y <= 800; y += 100) {
+ctx.beginPath(); ctx.moveTo(-800, y); ctx.lineTo(800, y); ctx.stroke();
+}
+
+if (gameState === 'PLAYING' || gameState === 'UPGRADE_MENU' || gameState === 'TRANSITION') {
+for (let tel of telegraphs) tel.draw();
+
+let drawList = [player, ...enemies];
+drawList.sort((a, b) => a.y - b.y);
+
+for (let obj of drawList) obj.draw();
+
+for (let proj of projectiles) proj.draw();
+for (let fx of effects) fx.draw();
+for (let p of particles) p.draw();
+for (let ft of floatingTexts) ft.draw();
+}
+
+ctx.restore();
+
+requestAnimationFrame(gameLoop);
+}
+
+// --- 12. EVENT LISTENERS & VIRTUAL JOYSTICK ---
+window.addEventListener('keydown', (e) => {
+try { audio.init(); } catch(err) {}
+keys[e.key.toLowerCase()] = true;
+});
+window.addEventListener('keyup', (e) => {
+keys[e.key.toLowerCase()] = false;
+});
+
+const joystickWrapper = document.getElementById('joystick-wrapper');
+const joystickCanvas = document.getElementById('joystickCanvas');
+const jCtx = joystickCanvas.getContext('2d');
+
+function drawJoystick() {
+jCtx.clearRect(0, 0, 130, 130);
+jCtx.beginPath();
+jCtx.arc(65, 65, 50, 0, Math.PI * 2);
+jCtx.fillStyle = 'rgba(15, 23, 42, 0.5)';
+jCtx.fill();
+jCtx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+jCtx.lineWidth = 3;
+jCtx.stroke();
+
+jCtx.beginPath();
+jCtx.arc(joystickPos.x, joystickPos.y, 22, 0, Math.PI * 2);
+jCtx.fillStyle = '#38bdf8';
+jCtx.fill();
+}
+
+window.addEventListener('touchstart', (e) => {
+try { audio.init(); } catch(err) {}
+if (gameState !== 'PLAYING') return;
+const touch = e.touches[0];
+if (touch.clientX < window.innerWidth * 0.65) {
+joystickWrapper.style.display = 'block';
+joystickWrapper.style.left = `${Math.max(10, Math.min(window.innerWidth - 140, touch.clientX - 65))}px`;
+joystickWrapper.style.top = `${Math.max(10, Math.min(window.innerHeight - 140, touch.clientY - 65))}px`;
+joystickActive = true;
+joystickPos = { x: 65, y: 65 };
+drawJoystick();
+}
+}, { passive: true });
+
+window.addEventListener('touchmove', (e) => {
+if (!joystickActive) return;
+const touch = e.touches[0];
+const rect = joystickWrapper.getBoundingClientRect();
+let dx = touch.clientX - (rect.left + 65);
+let dy = touch.clientY - (rect.top + 65);
+let dist = Math.hypot(dx, dy);
+
+if (dist > 45) {
+dx = (dx / dist) * 45;
+dy = (dy / dist) * 45;
+}
+
+joystickPos = { x: 65 + dx, y: 65 + dy };
+touchInput = { x: dx / 45, y: dy / 45, active: true };
+drawJoystick();
+}, { passive: true });
+
+window.addEventListener('touchend', () => {
+joystickActive = false;
+joystickPos = { x: 65, y: 65 };
+touchInput = { x: 0, y: 0, active: false };
+joystickWrapper.style.display = 'none';
+});
+
+// Start Main App Safely
+function startApp() {
+resizeCanvas();
+updateHUD();
+if (!gameLoopRunning) {
+gameLoopRunning = true;
+requestAnimationFrame(gameLoop);
+}
+}
+
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+startApp();
+} else {
+document.addEventListener('DOMContentLoaded', startApp);
+window.addEventListener('load', startApp);
+}
+</script>
+</body>
+</html>
