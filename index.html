@@ -1,1887 +1,1506 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PENGUIN: FROZEN FRENZY</title>
-<!-- Tailwind CSS for UI Layouts -->
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap');
-​* {
-user-select: none;
--webkit-user-select: none;
-touch-action: manipulation;
-box-sizing: border-box;
-}
-​body, html {
-margin: 0;
-padding: 0;
-width: 100%;
-height: 100%;
-overflow: hidden;
-background-color: #0f172a;
-font-family: 'Nunito', sans-serif;
-}
-​canvas {
-display: block;
-width: 100%;
-height: 100%;
-background: #0f172a;
-}
-​.font-fredoka {
-font-family: 'Fredoka One', cursive, sans-serif;
-}
-​.glass-panel {
-background: rgba(15, 23, 42, 0.88);
-backdrop-filter: blur(12px);
--webkit-backdrop-filter: blur(12px);
-border: 2px solid rgba(56, 189, 248, 0.35);
-box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-}
-​.btn-action {
-transition: all 0.15s ease-in-out;
-box-shadow: 0 6px 0 rgba(0, 0, 0, 0.3);
-cursor: pointer;
-}
-​.btn-action:hover {
-transform: translateY(-2px);
-box-shadow: 0 8px 0 rgba(0, 0, 0, 0.3);
-}
-​.btn-action:active {
-transform: translateY(4px);
-box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
-}
-​/* Rarity Border Styles */
-.rarity-common { border-color: #cbd5e1 !important; box-shadow: 0 0 15px rgba(203, 213, 225, 0.2); }
-.rarity-rare { border-color: #38bdf8 !important; box-shadow: 0 0 15px rgba(56, 189, 248, 0.3); }
-.rarity-epic { border-color: #a855f7 !important; box-shadow: 0 0 18px rgba(168, 85, 247, 0.4); }
-.rarity-legendary { border-color: #f59e0b !important; box-shadow: 0 0 25px rgba(245, 158, 11, 0.5); }
-​::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
-::-webkit-scrollbar-thumb { background: #38bdf8; border-radius: 3px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PENGUIN: FROZEN FRENZY</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #0f172a;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        .rarity-common { border-color: #94a3b8; }
+        .rarity-rare { border-color: #38bdf8; }
+        .rarity-epic { border-color: #a855f7; }
+        .rarity-legendary { border-color: #f59e0b; }
+        
+        .btn-action {
+            transition: all 0.15s ease;
+        }
+        .btn-action:active {
+            transform: scale(0.95);
+        }
+    </style>
 </head>
-<body class="bg-slate-900 text-white overflow-hidden select-none">
-​<!-- GAME CANVAS -->
-<canvas id="gameCanvas"></canvas>
-​<!-- UI CONTAINER OVERLAY -->
-<div id="ui-container" class="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between">
-​<!-- HUD TOP BAR (Playing State) -->
-<div id="hud-overlay" class="hidden p-3 sm:p-4 flex flex-col gap-2 pointer-events-none">
-<div class="flex justify-between items-start">
-​<!-- Player Info & Mini-Map Group -->
-<div class="flex items-start space-x-3 pointer-events-auto">
-<!-- Mini-Map Radar -->
-<div class="glass-panel p-1 rounded-2xl relative w-[100px] h-[100px] sm:w-[110px] sm:h-[110px] flex items-center justify-center overflow-hidden border-sky-400/50">
-<canvas id="minimapCanvas" width="100" height="100" class="rounded-xl"></canvas>
-<div class="absolute top-1 left-2 text-[9px] font-extrabold text-sky-300 bg-slate-950/80 px-1.5 py-0.5 rounded">RADAR</div>
-</div>
-​<!-- HP, XP & Level Info -->
-<div class="glass-panel p-3 rounded-2xl flex flex-col justify-between min-w-[200px] sm:min-w-[240px]">
-<div class="flex justify-between items-center mb-1">
-<span class="text-xs font-black text-sky-300 flex items-center gap-1">🐧 MR. KARO</span>
-<span id="level-badge" class="text-xs font-fredoka bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-lg">LV. 1</span>
-</div>
-​<!-- HP Bar -->
-<div class="mb-2">
-<div class="flex justify-between text-[10px] font-bold mb-0.5">
-<span class="text-slate-400">HEALTH</span>
-<span id="hp-text" class="text-emerald-400">100 / 100</span>
-</div>
-<div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden p-0.5 border border-slate-700">
-<div id="hp-bar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-200" style="width: 100%;"></div>
-</div>
-</div>
-​<!-- XP Bar -->
-<div>
-<div class="flex justify-between text-[10px] font-bold mb-0.5">
-<span class="text-slate-400">XP PROGRESS</span>
-<span id="xp-text" class="text-amber-300">0 / 100</span>
-</div>
-<div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden p-0.5 border border-slate-700">
-<div id="xp-bar" class="bg-gradient-to-r from-amber-500 to-yellow-300 h-full rounded-full transition-all duration-200" style="width: 0%;"></div>
-</div>
-</div>
-</div>
-</div>
-​<!-- Room / Area Tracker -->
-<div class="glass-panel px-4 sm:px-6 py-2 rounded-2xl text-center pointer-events-auto">
-<div id="area-title" class="text-[10px] sm:text-xs font-extrabold text-sky-400 tracking-wider">AREA 1: SNOWY SHORE</div>
-<div id="room-title" class="text-lg sm:text-xl font-fredoka text-amber-300">ROOM 1 / 5</div>
-</div>
-​<!-- Coins & Mute Button -->
-<div class="flex items-center space-x-2 pointer-events-auto">
-<div class="glass-panel px-3 sm:px-4 py-2 rounded-2xl flex items-center space-x-2">
-<span class="text-lg sm:text-xl">🐟</span>
-<span id="hud-coins" class="font-fredoka text-amber-400 text-base sm:text-lg">0</span>
-</div>
-<button id="btn-sound" onclick="toggleSound()" class="glass-panel p-2 sm:p-2.5 rounded-2xl hover:bg-slate-800 text-lg sm:text-xl btn-action">
-🔊
-</button>
-</div>
-</div>
-​<!-- BOSS HUD TOP BAR (Active during Boss Fight) -->
-<div id="boss-hud" class="hidden pointer-events-auto w-full max-w-xl mx-auto glass-panel p-3 rounded-2xl border-2 border-rose-500/50 shadow-2xl flex flex-col items-center">
-<div class="flex justify-between w-full text-xs font-fredoka mb-1">
-<span id="boss-name" class="text-rose-400 tracking-wider text-sm sm:text-base">FROSTFANG</span>
-<span id="boss-phase-tag" class="text-amber-400 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-500/40">PHASE 1</span>
-</div>
-<div class="w-full bg-slate-900 h-4 rounded-full overflow-hidden p-0.5 border border-rose-900/60">
-<div id="boss-hp-bar" class="bg-gradient-to-r from-rose-600 to-amber-500 h-full rounded-full transition-all duration-150" style="width: 100%;"></div>
-</div>
-</div>
-</div>
-​<!-- MAIN MENU -->
-<div id="main-menu" class="pointer-events-auto absolute inset-0 flex flex-col items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md z-30">
-<div class="text-center max-w-md w-full glass-panel p-6 sm:p-8 rounded-3xl border-2 border-sky-400/40 shadow-2xl relative overflow-hidden">
-<div class="absolute -top-10 -left-10 w-32 h-32 bg-sky-500/20 rounded-full blur-2xl"></div>
-<div class="absolute -bottom-10 -right-10 w-32 h-32 bg-blue-600/20 rounded-full blur-2xl"></div>
-​<div class="text-6xl mb-2 animate-bounce">🐧</div>
-<h1 class="text-4xl sm:text-5xl font-fredoka text-transparent bg-clip-text bg-gradient-to-b from-sky-200 via-sky-400 to-blue-600 tracking-wider drop-shadow-md">
-PENGUIN
-</h1>
-<h2 class="text-xl font-fredoka text-amber-400 tracking-widest mb-4 drop-shadow">
-FROZEN FRENZY
-</h2>
-​<div class="flex justify-center items-center space-x-2 bg-slate-800/80 px-4 py-2 rounded-xl mb-6 border border-slate-700/50 inline-flex">
-<span class="text-2xl">🐟</span>
-<span id="menu-coins" class="text-2xl font-fredoka text-amber-400">0</span>
-<span class="text-xs text-slate-400 font-bold ml-1">FISH COINS</span>
-</div>
-​<div class="space-y-3">
-<button id="btn-start" onclick="openAreaSelect()" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-fredoka text-xl rounded-2xl border-b-4 border-emerald-700 btn-action tracking-wide">
-PLAY NOW 🚀
-</button>
-<button id="btn-shop" onclick="openShop()" class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-fredoka text-lg rounded-2xl border-b-4 border-amber-700 btn-action tracking-wide">
-UPGRADES SHOP 🛒
-</button>
-</div>
-​<div class="mt-6 text-xs text-slate-400 font-semibold space-y-1">
-<p>⌨️ Controls: WASD / Arrow Keys</p>
-<p>📱 Mobile: Touch Virtual Joystick</p>
-</div>
-</div>
-</div>
-​<!-- AREA SELECT MODAL -->
-<div id="area-select-modal" class="hidden pointer-events-auto absolute inset-0 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md z-30">
-<div class="max-w-2xl w-full glass-panel p-6 rounded-3xl border-2 border-sky-400/40">
-<div class="flex justify-between items-center mb-6">
-<div>
-<h2 class="text-2xl sm:text-3xl font-fredoka text-sky-300">SELECT EXPEDITION AREA</h2>
-<p class="text-xs text-slate-300">Pilih area kutub yang ingin Mr. Karo jelajahi</p>
-</div>
-<button onclick="closeAreaSelect()" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300 text-sm font-bold">✕ CLOSE</button>
-</div>
-​<div id="area-cards-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto p-1 mb-6">
-<!-- Dynamic Area Cards inserted via JS -->
-</div>
-​<button onclick="closeAreaSelect()" class="w-full py-3 bg-slate-700 hover:bg-slate-600 text-white font-fredoka rounded-2xl btn-action">
-BACK TO MENU
-</button>
-</div>
-</div>
-​<!-- UPGRADES SHOP MODAL -->
-<div id="shop-modal" class="hidden pointer-events-auto absolute inset-0 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md z-30">
-<div class="max-w-lg w-full glass-panel p-6 rounded-3xl border-2 border-amber-400/40">
-<div class="flex justify-between items-center mb-4">
-<div>
-<h2 class="text-2xl font-fredoka text-amber-400">PERMANENT SHOP</h2>
-<p class="text-xs text-slate-300">Tingkatkan stats Mr. Karo untuk run berikutnya</p>
-</div>
-<div class="flex items-center space-x-1 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700">
-<span>🐟</span>
-<span id="shop-coins" class="font-fredoka text-amber-400 text-lg">0</span>
-</div>
-</div>
-​<div class="space-y-2.5 mb-6 max-h-[55vh] overflow-y-auto pr-1">
-<!-- Base HP -->
-<div class="bg-slate-800/80 p-3 rounded-2xl border border-slate-700 flex justify-between items-center">
-<div>
-<div class="font-bold text-sky-300 flex items-center gap-1 text-sm">❤️ Base HP <span id="shop-hp-lvl" class="text-xs text-amber-400">Lvl 0</span></div>
-<div class="text-[11px] text-slate-400">+15 Max Health</div>
-</div>
-<button id="btn-buy-hp" onclick="buyHP()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-fredoka rounded-xl btn-action text-xs flex items-center gap-1">
-<span id="cost-hp">🐟 50</span>
-</button>
-</div>
-​<!-- Base Damage -->
-<div class="bg-slate-800/80 p-3 rounded-2xl border border-slate-700 flex justify-between items-center">
-<div>
-<div class="font-bold text-sky-300 flex items-center gap-1 text-sm">⚔️ Base Damage <span id="shop-dmg-lvl" class="text-xs text-amber-400">Lvl 0</span></div>
-<div class="text-[11px] text-slate-400">+5 Attack Damage</div>
-</div>
-<button id="btn-buy-dmg" onclick="buyDamage()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-fredoka rounded-xl btn-action text-xs flex items-center gap-1">
-<span id="cost-dmg">🐟 50</span>
-</button>
-</div>
-​<!-- Move Speed -->
-<div class="bg-slate-800/80 p-3 rounded-2xl border border-slate-700 flex justify-between items-center">
-<div>
-<div class="font-bold text-sky-300 flex items-center gap-1 text-sm">👟 Move Speed <span id="shop-spd-lvl" class="text-xs text-amber-400">Lvl 0</span></div>
-<div class="text-[11px] text-slate-400">+0.25 Speed</div>
-</div>
-<button id="btn-buy-spd" onclick="buySpeed()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-fredoka rounded-xl btn-action text-xs flex items-center gap-1">
-<span id="cost-spd">🐟 50</span>
-</button>
-</div>
-​<!-- Attack Speed -->
-<div class="bg-slate-800/80 p-3 rounded-2xl border border-slate-700 flex justify-between items-center">
-<div>
-<div class="font-bold text-sky-300 flex items-center gap-1 text-sm">⚡ Attack Speed <span id="shop-aspd-lvl" class="text-xs text-amber-400">Lvl 0</span></div>
-<div class="text-[11px] text-slate-400">-5% Attack Cooldown</div>
-</div>
-<button id="btn-buy-aspd" onclick="buyAttackSpeed()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-fredoka rounded-xl btn-action text-xs flex items-center gap-1">
-<span id="cost-aspd">🐟 50</span>
-</button>
-</div>
-​<!-- Critical Chance -->
-<div class="bg-slate-800/80 p-3 rounded-2xl border border-slate-700 flex justify-between items-center">
-<div>
-<div class="font-bold text-sky-300 flex items-center gap-1 text-sm">🎯 Critical Chance <span id="shop-crit-lvl" class="text-xs text-amber-400">Lvl 0</span></div>
-<div class="text-[11px] text-slate-400">+4% Critical Hit Chance</div>
-</div>
-<button id="btn-buy-crit" onclick="buyCritChance()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-fredoka rounded-xl btn-action text-xs flex items-center gap-1">
-<span id="cost-crit">🐟 50</span>
-</button>
-</div>
-​<!-- XP Gain -->
-<div class="bg-slate-800/80 p-3 rounded-2xl border border-slate-700 flex justify-between items-center">
-<div>
-<div class="font-bold text-sky-300 flex items-center gap-1 text-sm">✨ XP Bonus <span id="shop-xp-lvl" class="text-xs text-amber-400">Lvl 0</span></div>
-<div class="text-[11px] text-slate-400">+10% XP Gain</div>
-</div>
-<button id="btn-buy-xp" onclick="buyXpBonus()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-fredoka rounded-xl btn-action text-xs flex items-center gap-1">
-<span id="cost-xp">🐟 50</span>
-</button>
-</div>
-​<!-- Coin Gain -->
-<div class="bg-slate-800/80 p-3 rounded-2xl border border-slate-700 flex justify-between items-center">
-<div>
-<div class="font-bold text-sky-300 flex items-center gap-1 text-sm">💰 Coin Bonus <span id="shop-coin-lvl" class="text-xs text-amber-400">Lvl 0</span></div>
-<div class="text-[11px] text-slate-400">+15% Fish Coin Multiplier</div>
-</div>
-<button id="btn-buy-coin" onclick="buyCoinBonus()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-fredoka rounded-xl btn-action text-xs flex items-center gap-1">
-<span id="cost-coin">🐟 50</span>
-</button>
-</div>
-</div>
-​<button id="btn-close-shop" onclick="closeShop()" class="w-full py-3 bg-slate-700 hover:bg-slate-600 text-white font-fredoka rounded-2xl border-b-4 border-slate-900 btn-action">
-BACK TO MENU
-</button>
-</div>
-</div>
-​<!-- LEVEL UP UPGRADE CHOICE MODAL -->
-<div id="upgrade-modal" class="hidden pointer-events-auto absolute inset-0 flex flex-col items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md z-40">
-<div class="text-center mb-5 animate-bounce">
-<span class="text-xs font-bold tracking-widest text-amber-400 bg-amber-950/80 border border-amber-500/40 px-3 py-1 rounded-full">CONGRATULATIONS!</span>
-<h2 class="text-3xl sm:text-4xl font-fredoka text-sky-300 mt-2">LEVEL UP!</h2>
-<p class="text-xs text-slate-300">Pilih 1 kemampuan baru untuk Mr. Karo</p>
-</div>
-​<div id="upgrade-cards" class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl w-full">
-<!-- Dynamic Upgrade Cards with Rarities inserted via JS -->
-</div>
-</div>
-​<!-- ROOM CLEAR REWARD MODAL -->
-<div id="room-clear-modal" class="hidden pointer-events-auto absolute inset-0 flex flex-col items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md z-30">
-<div class="glass-panel p-6 sm:p-8 rounded-3xl border-2 border-emerald-400/50 text-center max-w-md w-full">
-<div class="text-5xl mb-2">🎉</div>
-<h2 class="text-2xl font-fredoka text-emerald-400 mb-1">ROOM CLEAR!</h2>
-<p class="text-xs text-slate-300 mb-6">Mr. Karo berhasil mengamankan area ini!</p>
-​<div class="bg-slate-800/80 p-4 rounded-2xl border border-slate-700 space-y-2 mb-6 text-left">
-<div class="flex justify-between text-sm">
-<span class="text-slate-400">Bonus Health Restored:</span>
-<span id="rc-heal" class="font-bold text-emerald-400">+10 HP</span>
-</div>
-<div class="flex justify-between text-sm">
-<span class="text-slate-400">Bonus Fish Coins:</span>
-<span id="rc-coins" class="font-bold text-amber-400">🐟 +15</span>
-</div>
-<div class="flex justify-between text-sm">
-<span class="text-slate-400">XP Reward:</span>
-<span id="rc-xp" class="font-bold text-sky-300">+25 XP</span>
-</div>
-</div>
-​<button onclick="proceedNextRoom()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-fredoka text-lg rounded-2xl btn-action">
-NEXT ROOM ➔
-</button>
-</div>
-</div>
-​<!-- AREA TRANSITION TOAST -->
-<div id="area-transition-modal" class="hidden pointer-events-none absolute inset-0 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm z-30">
-<div class="text-center glass-panel p-8 rounded-3xl border-2 border-sky-400 animate-pulse max-w-sm w-full">
-<div class="text-6xl mb-2">🏔️</div>
-<h2 id="trans-title" class="text-2xl font-fredoka text-sky-300 mb-1">ENTERING AREA 2</h2>
-<p id="trans-desc" class="text-amber-300 font-bold">FROZEN TUNDRA</p>
-</div>
-</div>
-​<!-- GAME OVER MODAL -->
-<div id="gameover-modal" class="hidden pointer-events-auto absolute inset-0 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md z-40">
-<div class="max-w-md w-full glass-panel p-8 rounded-3xl border-2 border-rose-500/40 text-center">
-<div class="text-6xl mb-2">💀</div>
-<h2 class="text-4xl font-fredoka text-rose-500 mb-1">GAME OVER</h2>
-<p class="text-slate-300 text-sm mb-6">Mr. Karo kehabisan tenaga di tengah badai es...</p>
-​<div class="bg-slate-800/80 p-4 rounded-2xl border border-slate-700 space-y-2 mb-6 text-left">
-<div class="flex justify-between text-sm">
-<span class="text-slate-400">Area & Room:</span>
-<span id="go-room" class="font-bold text-amber-400">Area 1 - Room 1</span>
-</div>
-<div class="flex justify-between text-sm">
-<span class="text-slate-400">Level Reached:</span>
-<span id="go-level" class="font-bold text-sky-300">Lvl 1</span>
-</div>
-<div class="flex justify-between text-sm">
-<span class="text-slate-400">Enemies Defeated:</span>
-<span id="go-kills" class="font-bold text-sky-400">0</span>
-</div>
-<div class="flex justify-between text-sm">
-<span class="text-slate-400">Coins Earned:</span>
-<span id="go-coins" class="font-bold text-amber-300">🐟 0</span>
-</div>
-</div>
-​<button id="btn-retry" onclick="retryGame()" class="w-full py-4 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-fredoka text-xl rounded-2xl border-b-4 border-blue-800 btn-action">
-TRY AGAIN 🔄
-</button>
-</div>
-</div>
-​<!-- VICTORY MODAL -->
-<div id="victory-modal" class="hidden pointer-events-auto absolute inset-0 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md z-40">
-<div class="max-w-md w-full glass-panel p-8 rounded-3xl border-2 border-amber-400/50 text-center">
-<div class="text-6xl mb-2 animate-bounce">🏆</div>
-<h2 class="text-4xl font-fredoka text-amber-400 mb-1">VICTORY!</h2>
-<p class="text-sky-200 text-sm mb-6">Mr. Karo berhasil menaklukkan seluruh Kutub Es!</p>
-​<div class="bg-slate-800/80 p-4 rounded-2xl border border-slate-700 space-y-2 mb-6 text-left">
-<div class="flex justify-between text-sm">
-<span class="text-slate-400">Final Level:</span>
-<span id="vic-level" class="font-bold text-amber-400">Lvl 15</span>
-</div>
-<div class="flex justify-between text-sm">
-<span class="text-slate-400">Total Coins Earned:</span>
-<span id="vic-coins" class="font-bold text-amber-300">🐟 0</span>
-</div>
-<div class="flex justify-between text-sm">
-<span class="text-slate-400">Total Enemies Defeated:</span>
-<span id="vic-kills" class="font-bold text-sky-300">0</span>
-</div>
-</div>
-​<button id="btn-victory-continue" onclick="continueVictory()" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-fredoka text-xl rounded-2xl border-b-4 border-emerald-800 btn-action">
-CONTINUE TO MENU 👑
-</button>
-</div>
-</div>
-​<!-- VIRTUAL JOYSTICK FOR MOBILE -->
-<div id="joystick-wrapper" style="position: absolute; width: 130px; height: 130px; pointer-events: auto; display: none; z-index: 50;">
-<canvas id="joystickCanvas" width="130" height="130"></canvas>
-</div>
-</div>
-​<script>
-// --- 1. SOUND ENGINE ---
-class SoundEngine {
-constructor() {
-this.ctx = null;
-this.enabled = true;
-}
-init() {
-if (!this.enabled) return;
-try {
-if (!this.ctx) {
-const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-if (AudioContextClass) this.ctx = new AudioContextClass();
-}
-if (this.ctx && this.ctx.state === 'suspended') {
-this.ctx.resume().catch(() => {});
-}
-} catch(e) {}
-}
-playTone(freq, duration, type = 'sine', volume = 0.1) {
-if (!this.enabled) return;
-try {
-this.init();
-if (!this.ctx) return;
-const osc = this.ctx.createOscillator();
-const gain = this.ctx.createGain();
-osc.type = type;
-osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-gain.gain.setValueAtTime(volume, this.ctx.currentTime);
-gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
-osc.connect(gain);
-gain.connect(this.ctx.destination);
-osc.start();
-osc.stop(this.ctx.currentTime + duration);
-} catch(e) {}
-}
-playThrow() { this.playTone(420, 0.12, 'sine', 0.15); }
-playHit() { this.playTone(180, 0.08, 'square', 0.1); }
-playCrit() {
-this.playTone(650, 0.15, 'triangle', 0.2);
-setTimeout(() => this.playTone(850, 0.15, 'triangle', 0.2), 60);
-}
-playLevelUp() {
-if (!this.enabled) return;
-this.playTone(400, 0.1, 'sine', 0.15);
-setTimeout(() => this.playTone(600, 0.1, 'sine', 0.15), 80);
-setTimeout(() => this.playTone(800, 0.25, 'sine', 0.2), 160);
-}
-playDeath() { this.playTone(120, 0.3, 'sawtooth', 0.15); }
-playBossWarning() {
-this.playTone(90, 0.3, 'sawtooth', 0.25);
-setTimeout(() => this.playTone(110, 0.3, 'sawtooth', 0.25), 150);
-}
-playClick() { this.playTone(500, 0.05, 'sine', 0.1); }
-playShieldBlock() { this.playTone(750, 0.2, 'triangle', 0.25); }
-playHeal() { this.playTone(520, 0.2, 'sine', 0.15); }
-playIceSlam() { this.playTone(80, 0.4, 'square', 0.3); }
-playDash() { this.playTone(350, 0.1, 'triangle', 0.2); }
-playNova() { this.playTone(280, 0.25, 'sawtooth', 0.2); }
-}
-​const audio = new SoundEngine();
-​// --- 2. STORAGE SYSTEM ---
-const Storage = {
-get(key, defaultValue) {
-try {
-const val = localStorage.getItem('frozen_frenzy_v2_' + key);
-return val !== null ? JSON.parse(val) : defaultValue;
-} catch(e) { return defaultValue; }
-},
-set(key, value) {
-try {
-localStorage.setItem('frozen_frenzy_v2_' + key, JSON.stringify(value));
-} catch(e) {}
-}
-};
-​// Global State
-let totalCoins = Storage.get('coins', 0);
-let maxUnlockedArea = Storage.get('maxArea', 1);
-let metaUpgrades = Storage.get('meta', {
-hpLvl: 0, dmgLvl: 0, spdLvl: 0,
-aspdLvl: 0, critLvl: 0, xpLvl: 0, coinLvl: 0
-});
-​let canvas = document.getElementById('gameCanvas');
-let ctx = canvas.getContext('2d');
-let minimapCanvas = document.getElementById('minimapCanvas');
-let mCtx = minimapCanvas.getContext('2d');
-​let gameState = 'MENU'; // MENU, PLAYING, UPGRADE_MENU, GAMEOVER, VICTORY, TRANSITION, ROOM_CLEAR
-let currentArea = 1;
-let currentRoom = 1;
-let gameTime = 0;
-let totalKills = 0;
-let coinsEarnedThisRun = 0;
-​let keys = {};
-let touchInput = { x: 0, y: 0, active: false };
-let joystickActive = false;
-let joystickPos = { x: 65, y: 65 };
-​let cameraShake = 0;
-function addCameraShake(amount) { cameraShake = Math.max(cameraShake, amount); }
-​function resizeCanvas() {
-if (!canvas) return;
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resizeCanvas);
-​// --- 3. AREA & ENVIRONMENT CONFIGURATIONS ---
-const AREAS_CONFIG = {
-1: {
-name: 'SNOWY SHORE',
-bg: '#0f172a',
-gridColor: 'rgba(56, 189, 248, 0.08)',
-iceColor: '#0284c7',
-enemyPool: ['FOX', 'SEAL', 'ICE_CRAWLER'],
-boss: 'FROSTFANG',
-bossType: 'SEAL_BOSS'
-},
-2: {
-name: 'FROZEN TUNDRA',
-bg: '#09101d',
-gridColor: 'rgba(56, 189, 248, 0.1)',
-iceColor: '#38bdf8',
-enemyPool: ['FOX', 'WOLF', 'SEAL', 'SNOW_OWL'],
-boss: 'ARCTIC ALPHA',
-bossType: 'WOLF_BOSS'
-},
-3: {
-name: 'ICE CAVERN',
-bg: '#050b14',
-gridColor: 'rgba(6, 182, 212, 0.12)',
-iceColor: '#06b6d4',
-enemyPool: ['ICE_CRAWLER', 'WOLF', 'FROST_BAT', 'ICE_GOLEM'],
-boss: 'GLACIER GOLEM',
-bossType: 'GOLEM_BOSS'
-},
-4: {
-name: 'FROZEN FOREST',
-bg: '#06121e',
-gridColor: 'rgba(16, 185, 129, 0.12)',
-iceColor: '#10b981',
-enemyPool: ['SNOW_OWL', 'FROST_BAT', 'POLAR_BEAR', 'WALRUS'],
-boss: 'SNOW OWL KING',
-bossType: 'OWL_BOSS'
-},
-5: {
-name: 'GLACIER VALLEY',
-bg: '#0a0d1a',
-gridColor: 'rgba(139, 92, 246, 0.12)',
-iceColor: '#8b5cf6',
-enemyPool: ['POLAR_BEAR', 'ICE_GOLEM', 'WALRUS', 'WOLF'],
-boss: 'MAMMOTH PRIME',
-bossType: 'MAMMOTH_BOSS'
-},
-6: {
-name: 'FROZEN FORTRESS',
-bg: '#11081f',
-gridColor: 'rgba(244, 63, 94, 0.15)',
-iceColor: '#f43f5e',
-enemyPool: ['FOX', 'WOLF', 'SEAL', 'WALRUS', 'SNOW_OWL', 'ICE_CRAWLER', 'POLAR_BEAR', 'ICE_GOLEM', 'FROST_BAT'],
-boss: 'FROST KING',
-bossType: 'FROST_KING_BOSS'
-}
-};
-​// --- 4. UPGRADES DEFINITION & RARITY SYSTEM ---
-const RARITY_TIERS = {
-COMMON: { name: 'COMMON', mult: 1.0, color: '#cbd5e1', weight: 60 },
-RARE: { name: 'RARE', mult: 1.3, color: '#38bdf8', weight: 25 },
-EPIC: { name: 'EPIC', mult: 1.6, color: '#a855f7', weight: 11 },
-LEGENDARY: { name: 'LEGENDARY', mult: 2.0, color: '#f59e0b', weight: 4 }
-};
-​const UPGRADES_LIST = [
-{ id: 'FROZEN_FISH', name: 'Frozen Fish', icon: '❄️', desc: 'Serangan memberikan efek slow frost.', maxLevel: 3 },
-{ id: 'DOUBLE_FISH', name: 'Twin Salmon', icon: '🐟', desc: 'Melempar lebih banyak ikan sekaligus.', maxLevel: 3 },
-{ id: 'HEAVY_FISH', name: 'Heavy Trout', icon: '🔨', desc: 'Meningkatkan Damage & knockback.', maxLevel: 3 },
-{ id: 'RAPID_FISH', name: 'Rapid Tuna', icon: '⚡', desc: 'Meningkatkan kecepatan lemparan ikan.', maxLevel: 3 },
-{ id: 'PIERCING_FISH', name: 'Drill Mackerel', icon: '🎯', desc: 'Ikan menembus musuh tambahan.', maxLevel: 3 },
-{ id: 'BOUNCING_FISH', name: 'Ricochet Cod', icon: '🔄', desc: 'Ikan memantul ke musuh sekitarnya.', maxLevel: 3 },
-{ id: 'ICE_BURST', name: 'Ice Burst', icon: '💥', desc: 'Musuh tewas meledak memicu serpihan es.', maxLevel: 3 },
-{ id: 'PET_COMPANION', name: 'Baby Penguin', icon: '🐧', desc: 'Companion membantu menembak ikan.', maxLevel: 3 },
-{ id: 'FROST_SHIELD', name: 'Frost Shield', icon: '🛡️', desc: 'Perisai es menyerap 1 hit (Cooldown otomatis).', maxLevel: 3 },
-{ id: 'HEALTH_REGROWTH', name: 'Health Regrowth', icon: '💚', desc: 'Memulihkan HP setelah room dibersihkan.', maxLevel: 3 },
-{ id: 'CRITICAL_FISH', name: 'Critical Fish', icon: '🎯', desc: 'Meningkatkan Critical Hit Chance.', maxLevel: 3 },
-{ id: 'FROST_NOVA', name: 'Frost Nova', icon: '🌀', desc: 'Memicu ledakan es di sekitar Mr. Karo secara berkala.', maxLevel: 3 },
-{ id: 'DASH_WADDLE', name: 'Dash Waddle', icon: '💨', desc: 'Tekan SPACE / tombol Dash untuk meluncur cepat.', maxLevel: 3 },
-{ id: 'FISH_MAGNET', name: 'Fish Magnet', icon: '🧲', desc: 'Memperbesar radius menarik XP & Fish Coins.', maxLevel: 3 },
-{ id: 'ICE_ARMOR', name: 'Ice Armor', icon: '🧊', desc: 'Mengurangi damage yang diterima Mr. Karo.', maxLevel: 3 }
-];
-​// --- 5. PLAYER CLASS (MR. KARO) ---
-class Player {
-constructor() { this.reset(); }
-​reset() {
-this.x = 0;
-this.y = 0;
-this.radius = 18;
-​// Level & XP
-this.level = 1;
-this.xp = 0;
-this.xpToNextLevel = 100;
-​// Base Stats + Meta Upgrades
-let hpBonus = (metaUpgrades.hpLvl || 0) * 15;
-this.maxHp = 100 + hpBonus;
-this.hp = this.maxHp;
-​let dmgBonus = (metaUpgrades.dmgLvl || 0) * 5;
-this.baseDamage = 25 + dmgBonus;
-​let spdBonus = (metaUpgrades.spdLvl || 0) * 0.25;
-this.speed = 3.4 + spdBonus;
-​let aspdBonus = (metaUpgrades.aspdLvl || 0) * 0.05;
-this.attackCooldown = Math.max(0.2, 0.55 * (1 - aspdBonus));
-this.attackTimer = 0;
-​this.critChance = 0.20 + ((metaUpgrades.critLvl || 0) * 0.04);
-this.xpBonusMult = 1.0 + ((metaUpgrades.xpLvl || 0) * 0.10);
-this.coinBonusMult = 1.0 + ((metaUpgrades.coinLvl || 0) * 0.15);
-​this.upgradeLevels = {};
-this.armorReduction = 0;
-this.magnetRadius = 100;
-​// Passives
-this.hasPet = false;
-this.petTimer = 0;
-this.petX = 0;
-this.petY = 0;
-​this.hasShield = false;
-this.shieldActive = false;
-this.shieldCooldown = 0;
-​this.healthRegrowth = false;
-​this.hasNova = false;
-this.novaTimer = 0;
-​this.hasDash = false;
-this.dashCooldown = 0;
-this.isDashing = false;
-this.dashTimer = 0;
-​this.animTimer = 0;
-this.squashX = 1;
-this.squashY = 1;
-this.facingRight = true;
-}
-​addXP(amount) {
-let actualXP = amount * this.xpBonusMult;
-this.xp += actualXP;
-spawnFloatingText(this.x, this.y - 20, +${Math.round(actualXP)} XP, '#f59e0b');
-​if (this.xp >= this.xpToNextLevel) {
-this.xp -= this.xpToNextLevel;
-this.level++;
-this.xpToNextLevel = Math.round(this.xpToNextLevel * 1.35);
-​try { audio.playLevelUp(); } catch(e) {}
-spawnParticles(this.x, this.y, '#f59e0b', 30);
-spawnFloatingText(this.x, this.y - 45, 'LEVEL UP!', '#f59e0b', true);
-​updateHUD();
-triggerLevelUpModal();
-} else {
-updateHUD();
-}
-}
-​triggerDash() {
-if (!this.hasDash || this.dashCooldown > 0 || this.isDashing) return;
-let dashLvl = this.upgradeLevels['DASH_WADDLE'] || 1;
-this.isDashing = true;
-this.dashTimer = 0.2;
-this.dashCooldown = Math.max(1.5, 4.0 - (dashLvl * 0.8));
-​try { audio.playDash(); } catch(e) {}
-spawnParticles(this.x, this.y, '#38bdf8', 15);
-}
-​update(dt) {
-if (keys[' ']) this.triggerDash();
-​let moveX = 0, moveY = 0;
-if (keys['w'] || keys['arrowup']) moveY -= 1;
-if (keys['s'] || keys['arrowdown']) moveY += 1;
-if (keys['a'] || keys['arrowleft']) moveX -= 1;
-if (keys['d'] || keys['arrowright']) moveX += 1;
-​if (touchInput.active) {
-moveX = touchInput.x;
-moveY = touchInput.y;
-}
-​let speedMult = this.isDashing ? 3.0 : 1.0;
-if (this.isDashing) {
-this.dashTimer -= dt;
-if (this.dashTimer <= 0) this.isDashing = false;
-}
-if (this.hasDash && this.dashCooldown > 0) {
-this.dashCooldown -= dt;
-}
-​let mag = Math.hypot(moveX, moveY);
-if (mag > 0) {
-moveX /= mag;
-moveY /= mag;
-this.x += moveX * this.speed * speedMult * 60 * dt;
-this.y += moveY * this.speed * speedMult * 60 * dt;
-​this.animTimer += dt * 10;
-this.squashX = 1 + Math.sin(this.animTimer) * 0.08;
-this.squashY = 1 - Math.sin(this.animTimer) * 0.08;
-​if (moveX !== 0) this.facingRight = moveX > 0;
-} else {
-this.squashX = 1;
-this.squashY = 1;
-}
-​const boundary = 750;
-this.x = Math.max(-boundary, Math.min(boundary, this.x));
-this.y = Math.max(-boundary, Math.min(boundary, this.y));
-​// 1. Frost Shield Recharge
-if (this.hasShield && !this.shieldActive) {
-this.shieldCooldown -= dt;
-if (this.shieldCooldown <= 0) {
-this.shieldActive = true;
-try { audio.playShieldBlock(); } catch(e) {}
-spawnFloatingText(this.x, this.y - 35, 'SHIELD READY!', '#38bdf8', false);
-}
-}
-​// 2. Frost Nova Logic
-if (this.hasNova) {
-let novaLvl = this.upgradeLevels['FROST_NOVA'] || 1;
-let novaInterval = novaLvl === 3 ? 2.5 : (novaLvl === 2 ? 3.5 : 5.0);
-this.novaTimer -= dt;
-if (this.novaTimer <= 0) {
-this.novaTimer = novaInterval;
-try { audio.playNova(); } catch(e) {}
-addCameraShake(3);
-effects.push(new ImpactRing(this.x, this.y, 140, '#38bdf8'));
-spawnParticles(this.x, this.y, '#38bdf8', 25);
-​enemies.forEach(e => {
-if (Math.hypot(e.x - this.x, e.y - this.y) < 140) {
-e.takeDamage(this.baseDamage * (0.6 + novaLvl * 0.2), 0, 8, true, false, 0);
-}
-});
-}
-}
-​// 3. Pet Companion Logic
-if (this.hasPet) {
-let targetPetX = this.x - (this.facingRight ? 35 : -35);
-let targetPetY = this.y - 15;
-this.petX += (targetPetX - this.petX) * 0.1;
-this.petY += (targetPetY - this.petY) * 0.1;
-​let petLvl = this.upgradeLevels['PET_COMPANION'] || 1;
-let interval = petLvl >= 3 ? 0.7 : (petLvl === 2 ? 0.9 : 1.5);
-this.petTimer -= dt;
-if (this.petTimer <= 0) {
-this.petTimer = interval;
-let nearestEnemy = getNearestEnemy(this.petX, this.petY, 350);
-if (nearestEnemy) {
-let angle = Math.atan2(nearestEnemy.y - this.petY, nearestEnemy.x - this.petX);
-projectiles.push(new FishProjectile(this.petX, this.petY, angle, this, true));
-try { audio.playThrow(); } catch(e) {}
-​if (petLvl >= 3) {
-setTimeout(() => {
-if (nearestEnemy && nearestEnemy.hp > 0 && gameState === 'PLAYING') {
-let angle2 = Math.atan2(nearestEnemy.y - this.petY, nearestEnemy.x - this.petX);
-projectiles.push(new FishProjectile(this.petX, this.petY, angle2, this, true));
-}
-}, 120);
-}
-}
-}
-}
-​// Auto Attack Logic
-this.attackTimer -= dt;
-if (this.attackTimer <= 0) {
-let target = getNearestEnemy(this.x, this.y, 420);
-if (target) {
-this.shoot(target);
-let rapidLvl = this.upgradeLevels['RAPID_FISH'] || 0;
-let cdMult = rapidLvl === 3 ? 0.55 : (rapidLvl === 2 ? 0.70 : (rapidLvl === 1 ? 0.85 : 1.0));
-this.attackTimer = this.attackCooldown * cdMult;
-}
-}
-}
-​shoot(target) {
-try { audio.playThrow(); } catch(e) {}
-let baseAngle = Math.atan2(target.y - this.y, target.x - this.x);
-​let doubleLvl = this.upgradeLevels['DOUBLE_FISH'] || 0;
-let count = doubleLvl === 3 ? 4 : (doubleLvl === 2 ? 3 : (doubleLvl === 1 ? 2 : 1));
-​if (count === 1) {
-projectiles.push(new FishProjectile(this.x, this.y, baseAngle, this));
-} else {
-let spread = 0.22;
-let startAngle = baseAngle - (spread * (count - 1)) / 2;
-for (let i = 0; i < count; i++) {
-projectiles.push(new FishProjectile(this.x, this.y, startAngle + (i * spread), this));
-}
-}
-}
-​takeDamage(amount) {
-if (this.shieldActive) {
-this.shieldActive = false;
-let shieldLvl = this.upgradeLevels['FROST_SHIELD'] || 1;
-this.shieldCooldown = (shieldLvl === 3) ? 6 : (shieldLvl === 2 ? 10 : 15);
-​spawnParticles(this.x, this.y, '#38bdf8', 18);
-spawnFloatingText(this.x, this.y - 35, 'BLOCKED!', '#38bdf8', true);
-try { audio.playShieldBlock(); } catch(e) {}
-return;
-}
-​let actualDamage = Math.max(1, amount * (1 - this.armorReduction));
-this.hp -= actualDamage;
-addCameraShake(3);
-try { audio.playHit(); } catch(e) {}
-spawnParticles(this.x, this.y, '#ef4444', 10);
-spawnFloatingText(this.x, this.y - 25, -${Math.round(actualDamage)}, '#ef4444');
-​updateHUD();
-​if (this.hp <= 0) {
-this.hp = 0;
-triggerGameOver();
-}
-}
-​draw() {
-ctx.save();
-ctx.translate(this.x, this.y);
-​// Ground Shadow
-ctx.beginPath();
-ctx.ellipse(0, 16, 18, 8, 0, 0, Math.PI * 2);
-ctx.fillStyle = 'rgba(15, 23, 42, 0.4)';
-ctx.fill();
-​// Active Frost Shield Pulsing Aura
-if (this.shieldActive) {
-ctx.save();
-let pulse = 1 + Math.sin(Date.now() * 0.006) * 0.08;
-ctx.scale(pulse, pulse);
-ctx.beginPath();
-ctx.arc(0, 0, 30, 0, Math.PI * 2);
-ctx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
-ctx.lineWidth = 3;
-ctx.setLineDash([6, 4]);
-ctx.stroke();
-ctx.fillStyle = 'rgba(56, 189, 248, 0.15)';
-ctx.fill();
-ctx.restore();
-}
-​// Character Squash & Stretch (Mr. Karo)
-ctx.scale((this.facingRight ? 1 : -1) * (this.squashX || 1), this.squashY || 1);
-​// Feet
-ctx.fillStyle = '#f97316';
-ctx.beginPath();
-ctx.ellipse(-8, 14, 6, 3, 0, 0, Math.PI * 2);
-ctx.ellipse(8, 14, 6, 3, 0, 0, Math.PI * 2);
-ctx.fill();
-​// Body
-let bodyGrad = ctx.createLinearGradient(-16, -20, 16, 16);
-bodyGrad.addColorStop(0, '#1e293b');
-bodyGrad.addColorStop(1, '#0f172a');
-ctx.fillStyle = bodyGrad;
-ctx.beginPath();
-ctx.ellipse(0, 0, 16, 18, 0, 0, Math.PI * 2);
-ctx.fill();
-​// White Belly Volume
-ctx.fillStyle = '#f8fafc';
-ctx.beginPath();
-ctx.ellipse(3, 3, 10, 12, 0, 0, Math.PI * 2);
-ctx.fill();
-​// Eye
-ctx.fillStyle = '#0f172a';
-ctx.beginPath();
-ctx.arc(6, -6, 2.5, 0, Math.PI * 2);
-ctx.fill();
-ctx.fillStyle = '#ffffff';
-ctx.beginPath();
-ctx.arc(7, -7, 1, 0, Math.PI * 2);
-ctx.fill();
-​// Beak
-ctx.fillStyle = '#f97316';
-ctx.beginPath();
-ctx.moveTo(10, -3);
-ctx.lineTo(18, 0);
-ctx.lineTo(10, 3);
-ctx.closePath();
-ctx.fill();
-​ctx.restore();
-​// Pet Companion (World Space)
-if (this.hasPet) {
-ctx.save();
-ctx.translate(this.petX, this.petY);
-​ctx.beginPath();
-ctx.ellipse(0, 10, 10, 4, 0, 0, Math.PI * 2);
-ctx.fillStyle = 'rgba(15, 23, 42, 0.3)';
-ctx.fill();
-​ctx.fillStyle = '#38bdf8';
-ctx.beginPath();
-ctx.ellipse(0, 0, 10, 11, 0, 0, Math.PI * 2);
-ctx.fill();
-​ctx.fillStyle = '#ffffff';
-ctx.beginPath();
-ctx.ellipse(2, 2, 6, 7, 0, 0, Math.PI * 2);
-ctx.fill();
-​ctx.fillStyle = '#0f172a';
-ctx.beginPath();
-ctx.arc(4, -3, 1.5, 0, Math.PI * 2);
-ctx.fill();
-​ctx.fillStyle = '#f97316';
-ctx.beginPath();
-ctx.moveTo(6, -1);
-ctx.lineTo(11, 1);
-ctx.lineTo(6, 3);
-ctx.closePath();
-ctx.fill();
-​ctx.restore();
-}
-}
-}
-​// --- 6. DROP ITEMS (XP & COINS) ---
-class DropItem {
-constructor(x, y, type, value) {
-this.x = x;
-this.y = y;
-this.type = type; // 'XP' or 'COIN'
-this.value = value;
-this.radius = type === 'XP' ? 6 : 8;
-this.lifetime = 15.0;
-}
-update(dt) {
-this.lifetime -= dt;
-let dist = Math.hypot(player.x - this.x, player.y - this.y);
-if (dist < player.magnetRadius) {
-let angle = Math.atan2(player.y - this.y, player.x - this.x);
-let pullSpeed = 350 * (1 - dist / player.magnetRadius) + 100;
-this.x += Math.cos(angle) * pullSpeed * dt;
-this.y += Math.sin(angle) * pullSpeed * dt;
-}
-​if (dist < player.radius + this.radius) {
-if (this.type === 'XP') {
-player.addXP(this.value);
-} else if (this.type === 'COIN') {
-let actualCoins = Math.round(this.value * player.coinBonusMult);
-coinsEarnedThisRun += actualCoins;
-spawnFloatingText(this.x, this.y - 15, +🐟${actualCoins}, '#f59e0b');
-updateHUD();
-}
-this.lifetime = 0;
-}
-}
-draw() {
-ctx.save();
-ctx.translate(this.x, this.y);
-if (this.type === 'XP') {
-ctx.fillStyle = '#f59e0b';
-ctx.beginPath();
-ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-ctx.fill();
-ctx.fillStyle = '#fef08a';
-ctx.beginPath();
-ctx.arc(0, 0, this.radius * 0.5, 0, Math.PI * 2);
-ctx.fill();
-} else {
-ctx.font = '12px "Nunito"';
-ctx.textAlign = 'center';
-ctx.fillText('🐟', 0, 4);
-}
-ctx.restore();
-}
-}
-​// --- 7. PROJECTILES & VISUAL EFFECTS ---
-class FishProjectile {
-constructor(x, y, angle, owner, isPet = false) {
-this.x = x;
-this.y = y;
-this.angle = angle;
-this.speed = isPet ? 8 : 10;
-this.radius = isPet ? 8 : 11;
-this.owner = owner;
-this.isPet = isPet;
-​let heavyLvl = owner.upgradeLevels['HEAVY_FISH'] || 0;
-this.heavyLvl = heavyLvl;
-this.heavy = heavyLvl > 0 && !isPet;
-​if (isPet) {
-this.damage = owner.baseDamage * 0.5;
-} else {
-let heavyBonus = heavyLvl * 10;
-this.damage = owner.baseDamage + heavyBonus;
-}
-​this.pierceCount = isPet ? 0 : (owner.upgradeLevels['PIERCING_FISH'] || 0);
-this.bounceCount = isPet ? 0 : (owner.upgradeLevels['BOUNCING_FISH'] || 0);
-this.frozen = owner.upgradeLevels['FROZEN_FISH'] > 0 && !isPet;
-​this.lifetime = 2.5;
-this.hitEnemies = new Set();
-}
-​update(dt) {
-this.lifetime -= dt;
-this.x += Math.cos(this.angle) * this.speed * 60 * dt;
-this.y += Math.sin(this.angle) * this.speed * 60 * dt;
-​if (Math.random() < 0.6) {
-particles.push(new Particle(
-this.x, this.y,
-this.frozen ? '#38bdf8' : (this.heavy ? '#f97316' : '#cbd5e1'),
-Math.random() * 3 + 1, 0.2
-));
-}
-​for (let enemy of enemies) {
-if (this.hitEnemies.has(enemy.id)) continue;
-let dist = Math.hypot(enemy.x - this.x, enemy.y - this.y);
-if (dist < enemy.radius + this.radius) {
-this.hitEnemies.add(enemy.id);
-​let knockbackVal = this.heavy ? (3 + this.heavyLvl * 2.5) : 3;
-enemy.takeDamage(this.damage, this.angle, knockbackVal, this.frozen, this.heavy, this.heavyLvl);
-​if (this.bounceCount > 0) {
-this.bounceCount--;
-let nextTarget = getNearestEnemyExcept(this.x, this.y, 280, enemy.id);
-if (nextTarget) {
-let oldX = this.x, oldY = this.y;
-this.angle = Math.atan2(nextTarget.y - this.y, nextTarget.x - this.x);
-effects.push(new ArcEffect(oldX, oldY, nextTarget.x, nextTarget.y, '#38bdf8'));
-return;
-}
-}
-​if (this.pierceCount > 0) {
-this.pierceCount--;
-} else {
-this.lifetime = 0;
-break;
-}
-}
-}
-}
-​draw() {
-ctx.save();
-ctx.translate(this.x, this.y);
-ctx.rotate(this.angle + Math.PI / 4);
-​ctx.beginPath();
-ctx.arc(0, 0, this.radius + 2, 0, Math.PI * 2);
-ctx.fillStyle = this.frozen ? 'rgba(56, 189, 248, 0.4)' : (this.heavy ? 'rgba(249, 115, 22, 0.4)' : 'rgba(251, 146, 60, 0.3)');
-ctx.fill();
-​ctx.fillStyle = this.frozen ? '#0284c7' : (this.heavy ? '#c2410c' : '#ea580c');
-ctx.beginPath();
-ctx.ellipse(0, 0, this.radius + 2, this.radius - 3, 0, 0, Math.PI * 2);
-ctx.fill();
-​ctx.fillStyle = '#f97316';
-ctx.beginPath();
-ctx.moveTo(-this.radius, 0);
-ctx.lineTo(-this.radius - 6, -5);
-ctx.lineTo(-this.radius - 6, 5);
-ctx.closePath();
-ctx.fill();
-​ctx.restore();
-}
-}
-​class EnemyProjectile {
-constructor(x, y, angle, speed, damage, color = '#f43f5e') {
-this.x = x; this.y = y;
-this.angle = angle; this.speed = speed;
-this.damage = damage; this.color = color;
-this.radius = 7; this.lifetime = 4.0;
-}
-update(dt) {
-this.lifetime -= dt;
-this.x += Math.cos(this.angle) * this.speed * 60 * dt;
-this.y += Math.sin(this.angle) * this.speed * 60 * dt;
-​if (Math.hypot(player.x - this.x, player.y - this.y) < player.radius + this.radius) {
-player.takeDamage(this.damage);
-this.lifetime = 0;
-}
-}
-draw() {
-ctx.save();
-ctx.translate(this.x, this.y);
-ctx.fillStyle = this.color;
-ctx.beginPath();
-ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-ctx.fill();
-ctx.restore();
-}
-}
-​// --- 8. ENEMIES & BOSS SYSTEM ---
-class Enemy {
-constructor(x, y, type, isElite = false) {
-this.id = Math.random().toString();
-this.x = x;
-this.y = y;
-this.type = type;
-this.isElite = isElite;
-​let areaHpMult = 1.0 + (currentArea - 1) * 0.4;
-let areaDmgMult = 1.0 + (currentArea - 1) * 0.25;
-​// Default Stats
-this.radius = 18;
-this.speed = 2.0;
-this.maxHp = 60 * areaHpMult;
-this.damage = 12 * areaDmgMult;
-this.color = '#cbd5e1';
-this.xpValue = 15 * currentArea;
-this.coinValue = Math.floor(Math.random() * 3) + 1;
-​this.configureType(type, areaHpMult, areaDmgMult);
-​if (this.isElite) {
-this.radius *= 1.35;
-this.maxHp *= 2.2;
-this.damage *= 1.4;
-this.xpValue = 60 * currentArea;
-this.coinValue = Math.floor(Math.random() * 6) + 5;
-}
-​this.hp = this.maxHp;
-this.slowTimer = 0;
-this.slowAmount = 0;
-this.flashTimer = 0;
-}
-​configureType(type, hpMult, dmgMult) {
-if (type === 'FOX') {
-this.radius = 16; this.speed = 2.4; this.maxHp = (45 + currentRoom * 8) * hpMult;
-this.damage = 10 * dmgMult; this.color = '#f97316'; this.xpValue = 10 * currentArea;
-} else if (type === 'WOLF') {
-this.radius = 18; this.speed = 2.0; this.maxHp = (80 + currentRoom * 12) * hpMult;
-this.damage = 14 * dmgMult; this.color = '#64748b'; this.xpValue = 20 * currentArea;
-this.chargeTimer = 0; this.charging = false;
-} else if (type === 'SEAL') {
-this.radius = 22; this.speed = 1.4; this.maxHp = (130 + currentRoom * 18) * hpMult;
-this.damage = 18 * dmgMult; this.color = '#38bdf8'; this.xpValue = 15 * currentArea;
-} else if (type === 'WALRUS') {
-this.radius = 28; this.speed = 1.0; this.maxHp = (240 + currentRoom * 25) * hpMult;
-this.damage = 24 * dmgMult; this.color = '#475569'; this.xpValue = 30 * currentArea;
-} else if (type === 'SNOW_OWL') {
-this.radius = 16; this.speed = 1.5; this.maxHp = (70 + currentRoom * 10) * hpMult;
-this.damage = 12 * dmgMult; this.color = '#e2e8f0'; this.xpValue = 25 * currentArea;
-this.shootTimer = 2.5;
-} else if (type === 'ICE_CRAWLER') {
-this.radius = 14; this.speed = 3.0; this.maxHp = (40 + currentRoom * 6) * hpMult;
-this.damage = 8 * dmgMult; this.color = '#06b6d4'; this.xpValue = 12 * currentArea;
-this.zigzagTimer = 0;
-} else if (type === 'POLAR_BEAR') {
-this.radius = 32; this.speed = 1.2; this.maxHp = (350 + currentRoom * 35) * hpMult;
-this.damage = 28 * dmgMult; this.color = '#f8fafc'; this.xpValue = 50 * currentArea;
-this.slamTimer = 4.0;
-} else if (type === 'ICE_GOLEM') {
-this.radius = 35; this.speed = 0.8; this.maxHp = (500 + currentRoom * 45) * hpMult;
-this.damage = 32 * dmgMult; this.color = '#0284c7'; this.xpValue = 55 * currentArea;
-} else if (type === 'FROST_BAT') {
-this.radius = 15; this.speed = 2.8; this.maxHp = (50 + currentRoom * 8) * hpMult;
-this.damage = 10 * dmgMult; this.color = '#a855f7'; this.xpValue = 18 * currentArea;
-}
-}
-​update(dt) {
-if (this.flashTimer > 0) this.flashTimer -= dt;
-​let currentSpeed = this.speed;
-if (this.slowTimer > 0) {
-this.slowTimer -= dt;
-currentSpeed *= (1 - this.slowAmount);
-}
-​let angle = Math.atan2(player.y - this.y, player.x - this.x);
-​// Type Specific Behaviors
-if (this.type === 'WOLF') {
-this.chargeTimer += dt;
-if (this.chargeTimer > 3.0) {
-if (!this.charging) {
-this.charging = true;
-telegraphs.push(new TelegraphLine(this.x, this.y, player.x, player.y, 0.6));
-}
-if (this.chargeTimer > 3.8) { this.chargeTimer = 0; this.charging = false; }
-}
-if (this.charging) currentSpeed *= 2.2;
-} else if (this.type === 'SNOW_OWL') {
-this.shootTimer -= dt;
-if (this.shootTimer <= 0) {
-this.shootTimer = 2.8;
-enemyProjectiles.push(new EnemyProjectile(this.x, this.y, angle, 4.5, this.damage));
-}
-// Keep distance
-let dist = Math.hypot(player.x - this.x, player.y - this.y);
-if (dist < 220) currentSpeed = -currentSpeed * 0.5;
-} else if (this.type === 'ICE_CRAWLER') {
-this.zigzagTimer += dt * 6;
-angle += Math.sin(this.zigzagTimer) * 0.8;
-} else if (this.type === 'POLAR_BEAR') {
-this.slamTimer -= dt;
-if (this.slamTimer <= 0) {
-this.slamTimer = 4.5;
-let slamX = this.x, slamY = this.y;
-telegraphs.push(new TelegraphCircle(slamX, slamY, 90, 0.7, () => {
-effects.push(new ImpactRing(slamX, slamY, 90, '#38bdf8'));
-if (Math.hypot(player.x - slamX, player.y - slamY) < 90) player.takeDamage(this.damage * 1.2);
-}));
-}
-}
-​this.x += Math.cos(angle) * currentSpeed * 60 * dt;
-this.y += Math.sin(angle) * currentSpeed * 60 * dt;
-​let dist = Math.hypot(player.x - this.x, player.y - this.y);
-if (dist < player.radius + this.radius) {
-player.takeDamage(this.damage * dt * 1.8);
-}
-}
-​takeDamage(incomingDamage, angle, knockback, isFrozen, isHeavy, heavyLvl) {
-let isCrit = Math.random() < player.critChance;
-let finalDamage = incomingDamage * (isCrit ? 1.5 : 1.0);
-​this.hp -= finalDamage;
-this.flashTimer = 0.12;
-​if (isCrit) {
-try { audio.playCrit(); } catch(e) {}
-addCameraShake(3.5);
-spawnFloatingText(this.x, this.y - 25, ${Math.round(finalDamage)}!, '#f59e0b', true);
-spawnParticles(this.x, this.y, '#f59e0b', 12);
-} else {
-try { audio.playHit(); } catch(e) {}
-spawnFloatingText(this.x, this.y - 20, ${Math.round(finalDamage)}, '#ffffff', false);
-spawnParticles(this.x, this.y, this.color, 6);
-}
-​if (isFrozen) {
-let frozenLvl = player.upgradeLevels['FROZEN_FISH'] || 1;
-this.slowTimer = frozenLvl === 3 ? 3.0 : (frozenLvl === 2 ? 2.5 : 2.0);
-this.slowAmount = frozenLvl === 3 ? 0.45 : (frozenLvl === 2 ? 0.35 : 0.25);
-}
-​if (isHeavy) {
-addCameraShake(heavyLvl >= 3 ? 4 : 2);
-if (heavyLvl >= 3) effects.push(new ImpactRing(this.x, this.y, 40, '#f97316'));
-}
-​this.x += Math.cos(angle) * knockback;
-this.y += Math.sin(angle) * knockback;
-​if (this.hp <= 0) this.die();
-}
-​die() {
-totalKills++;
-try { audio.playDeath(); } catch(e) {}
-spawnParticles(this.x, this.y, this.color, 15);
-​// Spawn Drops
-drops.push(new DropItem(this.x, this.y, 'XP', this.xpValue));
-if (Math.random() < 0.7) {
-drops.push(new DropItem(this.x + 10, this.y, 'COIN', this.coinValue));
-}
-​let burstLvl = player.upgradeLevels['ICE_BURST'] || 0;
-if (burstLvl > 0) {
-addCameraShake(2.5);
-let shardCount = burstLvl === 3 ? 9 : (burstLvl === 2 ? 6 : 3);
-for (let i = 0; i < shardCount; i++) {
-let shardAngle = (Math.PI * 2 / shardCount) * i;
-let proj = new FishProjectile(this.x, this.y, shardAngle, player, true);
-proj.damage = player.baseDamage * 0.4;
-projectiles.push(proj);
-}
-}
-}
-​draw() {
-ctx.save();
-ctx.translate(this.x, this.y);
-​// Shadow
-ctx.beginPath();
-ctx.ellipse(0, this.radius * 0.7, this.radius, this.radius * 0.4, 0, 0, Math.PI * 2);
-ctx.fillStyle = 'rgba(15, 23, 42, 0.4)';
-ctx.fill();
-​if (this.isElite) {
-ctx.beginPath();
-ctx.arc(0, 0, this.radius + 6, 0, Math.PI * 2);
-ctx.strokeStyle = '#f59e0b';
-ctx.lineWidth = 2;
-ctx.stroke();
-​ctx.font = '900 10px "Fredoka One"';
-ctx.fillStyle = '#f59e0b';
-ctx.textAlign = 'center';
-ctx.fillText('ELITE', 0, -this.radius - 8);
-}
-​let bodyColor = this.flashTimer > 0 ? '#ffffff' : this.color;
-ctx.fillStyle = bodyColor;
-ctx.beginPath();
-ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-ctx.fill();
-​ctx.restore();
-}
-}
-​// BOSS CLASS WITH UNIQUE AREA AI
-class BossEnemy extends Enemy {
-constructor(x, y, bossName, bossType) {
-super(x, y, 'BOSS', false);
-this.bossName = bossName;
-this.bossType = bossType;
-this.isBoss = true;
-​let areaHp = 1000 + (currentArea * 600);
-this.maxHp = areaHp;
-this.hp = this.maxHp;
-this.radius = 48;
-this.damage = 25 + (currentArea * 8);
-this.xpValue = 200 * currentArea;
-this.coinValue = 40 + (currentArea * 10);
-​this.phase2 = false;
-this.attackTimer = 2.0;
-​document.getElementById('boss-hud').classList.remove('hidden');
-document.getElementById('boss-name').innerText = this.bossName;
-document.getElementById('boss-phase-tag').innerText = 'PHASE 1';
-this.updateBossHpBar();
-}
-​updateBossHpBar() {
-let pct = Math.max(0, (this.hp / this.maxHp) * 100);
-document.getElementById('boss-hp-bar').style.width = ${pct}%;
-}
-​update(dt) {
-super.update(dt);
-this.updateBossHpBar();
-​if (this.hp <= this.maxHp * 0.5 && !this.phase2) {
-this.phase2 = true;
-this.speed *= 1.35;
-document.getElementById('boss-phase-tag').innerText = 'ENRAGED (PHASE 2)';
-document.getElementById('boss-phase-tag').classList.add('animate-pulse');
-addCameraShake(8);
-try { audio.playBossWarning(); } catch(e) {}
-spawnFloatingText(this.x, this.y - 55, 'ENRAGED!', '#ef4444', true);
-}
-​this.attackTimer -= dt;
-if (this.attackTimer <= 0) {
-this.attackTimer = this.phase2 ? 2.2 : 3.5;
-this.executeBossAttack();
-}
-}
-​executeBossAttack() {
-let slamX = player.x, slamY = player.y;
-telegraphs.push(new TelegraphCircle(slamX, slamY, 120, 0.8, () => {
-try { audio.playIceSlam(); } catch(e) {}
-addCameraShake(7);
-effects.push(new ImpactRing(slamX, slamY, 120, '#f43f5e'));
-spawnParticles(slamX, slamY, '#f43f5e', 30);
-if (Math.hypot(player.x - slamX, player.y - slamY) < 120) {
-player.takeDamage(this.damage * 1.3);
-}
-}));
-​if (this.phase2) {
-for (let i = 0; i < 4; i++) {
-let angle = (Math.PI * 2 / 4) * i;
-enemyProjectiles.push(new EnemyProjectile(this.x, this.y, angle, 4.0, this.damage * 0.8));
-}
-}
-}
-​die() {
-document.getElementById('boss-hud').classList.add('hidden');
-super.die();
-}
-}
-​// --- 9. PARTICLES & EFFECTS ENGINE ---
-let particles = [];
-let floatingTexts = [];
-let projectiles = [];
-let enemyProjectiles = [];
-let enemies = [];
-let drops = [];
-let telegraphs = [];
-let effects = [];
-​class Particle {
-constructor(x, y, color, size, lifetime = 0.5) {
-this.x = x; this.y = y; this.color = color;
-this.size = size; this.lifetime = lifetime; this.maxLifetime = lifetime;
-this.vx = (Math.random() - 0.5) * 120;
-this.vy = (Math.random() - 0.5) * 120;
-}
-update(dt) { this.lifetime -= dt; this.x += this.vx * dt; this.y += this.vy * dt; }
-draw() {
-ctx.save();
-ctx.globalAlpha = Math.max(0, this.lifetime / this.maxLifetime);
-ctx.fillStyle = this.color;
-ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
-ctx.restore();
-}
-}
-​class FloatingText {
-constructor(x, y, text, color, isLarge = false) {
-this.x = x; this.y = y; this.text = text; this.color = color;
-this.isLarge = isLarge; this.lifetime = 0.8;
-}
-update(dt) { this.lifetime -= dt; this.y -= 25 * dt; }
-draw() {
-ctx.save();
-ctx.globalAlpha = Math.max(0, this.lifetime / 0.8);
-ctx.font = this.isLarge ? '900 20px "Fredoka One"' : '700 14px "Nunito"';
-ctx.fillStyle = this.color; ctx.textAlign = 'center';
-ctx.fillText(this.text, this.x, this.y);
-ctx.restore();
-}
-}
-​class TelegraphCircle {
-constructor(x, y, radius, duration, onComplete) {
-this.x = x; this.y = y; this.radius = radius;
-this.duration = duration; this.timer = duration; this.onComplete = onComplete;
-}
-update(dt) {
-this.timer -= dt;
-if (this.timer <= 0 && this.onComplete) this.onComplete();
-}
-draw() {
-let progress = 1 - (this.timer / this.duration);
-ctx.save();
-ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-ctx.strokeStyle = 'rgba(239, 68, 68, 0.7)'; ctx.lineWidth = 3; ctx.stroke();
-ctx.beginPath(); ctx.arc(this.x, this.y, this.radius * progress, 0, Math.PI * 2);
-ctx.fillStyle = 'rgba(239, 68, 68, 0.25)'; ctx.fill();
-ctx.restore();
-}
-}
-​class TelegraphLine {
-constructor(x1, y1, x2, y2, duration) {
-this.x1 = x1; this.y1 = y1; this.x2 = x2; this.y2 = y2;
-this.timer = duration;
-}
-update(dt) { this.timer -= dt; }
-draw() {
-ctx.save(); ctx.beginPath(); ctx.moveTo(this.x1, this.y1); ctx.lineTo(this.x2, this.y2);
-ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)'; ctx.lineWidth = 4; ctx.setLineDash([8, 6]); ctx.stroke();
-ctx.restore();
-}
-}
-​class ImpactRing {
-constructor(x, y, maxRadius, color) {
-this.x = x; this.y = y; this.maxRadius = maxRadius; this.color = color;
-this.radius = 5; this.lifetime = 0.35; this.maxLifetime = 0.35;
-}
-update(dt) { this.lifetime -= dt; this.radius += (this.maxRadius / this.maxLifetime) * dt; }
-draw() {
-ctx.save(); ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-ctx.strokeStyle = this.color; ctx.lineWidth = 3;
-ctx.globalAlpha = Math.max(0, this.lifetime / this.maxLifetime); ctx.stroke();
-ctx.restore();
-}
-}
-​class ArcEffect {
-constructor(x1, y1, x2, y2, color) {
-this.x1 = x1; this.y1 = y1; this.x2 = x2; this.y2 = y2; this.color = color; this.lifetime = 0.2;
-}
-update(dt) { this.lifetime -= dt; }
-draw() {
-ctx.save(); ctx.beginPath(); ctx.moveTo(this.x1, this.y1); ctx.lineTo(this.x2, this.y2);
-ctx.strokeStyle = this.color; ctx.lineWidth = 3;
-ctx.globalAlpha = Math.max(0, this.lifetime / 0.2); ctx.stroke();
-ctx.restore();
-}
-}
-​function spawnParticles(x, y, color, count) {
-if (particles.length > 150) return;
-for (let i = 0; i < count; i++) particles.push(new Particle(x, y, color, Math.random() * 4 + 2, 0.4));
-}
-​function spawnFloatingText(x, y, text, color, isLarge = false) {
-floatingTexts.push(new FloatingText(x, y, text, color, isLarge));
-}
-​function getNearestEnemy(x, y, maxDist) {
-let nearest = null, minDist = maxDist;
-for (let enemy of enemies) {
-let dist = Math.hypot(enemy.x - x, enemy.y - y);
-if (dist < minDist) { minDist = dist; nearest = enemy; }
-}
-return nearest;
-}
-​function getNearestEnemyExcept(x, y, maxDist, exceptId) {
-let nearest = null, minDist = maxDist;
-for (let enemy of enemies) {
-if (enemy.id === exceptId) continue;
-let dist = Math.hypot(enemy.x - x, enemy.y - y);
-if (dist < minDist) { minDist = dist; nearest = enemy; }
-}
-return nearest;
-}
-​// --- 10. MINI-MAP RADAR RENDERER ---
-function drawMiniMap() {
-mCtx.clearRect(0, 0, 100, 100);
-mCtx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-mCtx.fillRect(0, 0, 100, 100);
-​const radarRange = 500;
-const center = 50;
-​// Player Dot
-mCtx.fillStyle = '#38bdf8';
-mCtx.beginPath();
-mCtx.arc(center, center, 4, 0, Math.PI * 2);
-mCtx.fill();
-​// Enemies Dots
-for (let e of enemies) {
-let dx = e.x - player.x;
-let dy = e.y - player.y;
-let mapX = center + (dx / radarRange) * center;
-let mapY = center + (dy / radarRange) * center;
-​if (e.isBoss) {
-// Boss Dot or Edge Indicator
-let isOffscreen = (Math.abs(dx) > radarRange || Math.abs(dy) > radarRange);
-if (isOffscreen) {
-let angle = Math.atan2(dy, dx);
-let edgeX = center + Math.cos(angle) * 42;
-let edgeY = center + Math.sin(angle) * 42;
-mCtx.fillStyle = '#a855f7';
-mCtx.beginPath(); mCtx.arc(edgeX, edgeY, 6, 0, Math.PI * 2); mCtx.fill();
-} else {
-mCtx.fillStyle = '#a855f7';
-mCtx.beginPath(); mCtx.arc(mapX, mapY, 6, 0, Math.PI * 2); mCtx.fill();
-}
-} else if (mapX >= 0 && mapX <= 100 && mapY >= 0 && mapY <= 100) {
-mCtx.fillStyle = e.isElite ? '#f59e0b' : '#ef4444';
-mCtx.beginPath();
-mCtx.arc(mapX, mapY, e.isElite ? 3.5 : 2.5, 0, Math.PI * 2);
-mCtx.fill();
-}
-}
-}
-​// --- 11. ROOM & AREA PROGRESSION LOGIC ---
-let player = new Player();
-​function spawnEnemyAtSafeDistance(type) {
-let angle = Math.random() * Math.PI * 2;
-let dist = 260 + Math.random() * 180;
-let spawnX = player.x + Math.cos(angle) * dist;
-let spawnY = player.y + Math.sin(angle) * dist;
-​spawnX = Math.max(-700, Math.min(700, spawnX));
-spawnY = Math.max(-700, Math.min(700, spawnY));
-​let isElite = Math.random() < 0.15; // 15% Elite Chance
-enemies.push(new Enemy(spawnX, spawnY, type, isElite));
-}
-​function loadRoom(area, room) {
-enemies = []; projectiles = []; enemyProjectiles = []; drops = [];
-telegraphs = []; effects = [];
-​const cfg = AREAS_CONFIG[area];
-document.getElementById('area-title').innerText = AREA ${area}: ${cfg.name};
-document.getElementById('room-title').innerText = ROOM ${room} / 5;
-document.getElementById('boss-hud').classList.add('hidden');
-​if (room === 6 || room === 5 && (area === 6)) { // Boss Room
-try { audio.playBossWarning(); } catch(e) {}
-enemies.push(new BossEnemy(0, -250, cfg.boss, cfg.bossType));
-} else {
-let count = 4 + Math.floor(room * 1.2);
-for (let i = 0; i < count; i++) {
-let selectedType = cfg.enemyPool[Math.floor(Math.random() * cfg.enemyPool.length)];
-spawnEnemyAtSafeDistance(selectedType);
-}
-}
-}
-​function checkRoomClear() {
-if (gameState === 'PLAYING' && enemies.length === 0) {
-gameState = 'ROOM_CLEAR';
-showRoomClearModal();
-}
-}
-​function showRoomClearModal() {
-let healAmt = Math.round(player.maxHp * 0.10);
-player.hp = Math.min(player.maxHp, player.hp + healAmt);
-​let bonusCoins = 10 + currentArea * 5;
-coinsEarnedThisRun += bonusCoins;
-​let bonusXP = 30 + currentArea * 10;
-player.addXP(bonusXP);
-​document.getElementById('rc-heal').innerText = +${healAmt} HP;
-document.getElementById('rc-coins').innerText = 🐟 +${bonusCoins};
-document.getElementById('rc-xp').innerText = +${bonusXP} XP;
-document.getElementById('room-clear-modal').classList.remove('hidden');
-​updateHUD();
-}
-​function proceedNextRoom() {
-document.getElementById('room-clear-modal').classList.add('hidden');
-​if (player.healthRegrowth && player.hp > 0) {
-let regrowthLvl = player.upgradeLevels['HEALTH_REGROWTH'] || 1;
-let pct = regrowthLvl === 3 ? 0.15 : (regrowthLvl === 2 ? 0.10 : 0.05);
-let healAmount = player.maxHp * pct;
-player.hp = Math.min(player.maxHp, player.hp + healAmount);
-spawnFloatingText(player.x, player.y - 35, +${Math.round(healAmount)} HP, '#22c55e', true);
-updateHUD();
-}
-​currentRoom++;
-if (currentRoom > 5) {
-if (currentArea < 6) {
-currentArea++;
-currentRoom = 1;
-if (currentArea > maxUnlockedArea) {
-maxUnlockedArea = currentArea;
-Storage.set('maxArea', maxUnlockedArea);
-}
-​gameState = 'TRANSITION';
-let transModal = document.getElementById('area-transition-modal');
-let cfg = AREAS_CONFIG[currentArea];
-document.getElementById('trans-title').innerText = ENTERING AREA ${currentArea};
-document.getElementById('trans-desc').innerText = cfg.name;
-transModal.classList.remove('hidden');
-​setTimeout(() => {
-transModal.classList.add('hidden');
-loadRoom(currentArea, currentRoom);
-gameState = 'PLAYING';
-}, 2200);
-} else {
-triggerVictory();
-}
-} else {
-loadRoom(currentArea, currentRoom);
-gameState = 'PLAYING';
-}
-}
-​// --- 12. LEVEL UP UPGRADE MODAL WITH RARITY SYSTEM ---
-function triggerLevelUpModal() {
-gameState = 'UPGRADE_MENU';
-​let container = document.getElementById('upgrade-cards');
-container.innerHTML = '';
-​let availableUpgrades = UPGRADES_LIST.filter(item => {
-let currentLvl = player.upgradeLevels[item.id] || 0;
-return currentLvl < item.maxLevel;
-});
-​availableUpgrades.sort(() => 0.5 - Math.random());
-let selectedCards = availableUpgrades.slice(0, 3);
-​selectedCards.forEach(upg => {
-let currentLvl = player.upgradeLevels[upg.id] || 0;
-let nextLvl = currentLvl + 1;
-​// Roll Rarity
-let rarityRoll = Math.random() * 100;
-let rarity = RARITY_TIERS.COMMON;
-if (rarityRoll > 96) rarity = RARITY_TIERS.LEGENDARY;
-else if (rarityRoll > 85) rarity = RARITY_TIERS.EPIC;
-else if (rarityRoll > 60) rarity = RARITY_TIERS.RARE;
-​let card = document.createElement('div');
-card.className = glass-panel p-5 rounded-2xl border-2 hover:scale-105 cursor-pointer text-left btn-action flex flex-col justify-between rarity-${rarity.name.toLowerCase()};
-card.innerHTML = <div> <div class="flex justify-between items-center mb-2"> <span class="text-4xl">${upg.icon}</span> <span class="text-[10px] font-black px-2 py-0.5 rounded-md text-slate-900 font-fredoka" style="background:${rarity.color}">${rarity.name}</span> </div> <h3 class="font-fredoka text-lg text-amber-300 mb-1">${upg.name} <span class="text-xs text-sky-400">Lvl ${nextLvl}</span></h3> <p class="text-xs text-slate-300">${upg.desc}</p> </div> <button class="mt-4 w-full py-2 bg-sky-600 hover:bg-sky-500 text-white font-fredoka rounded-xl text-sm">SELECT</button>;
-card.onclick = () => {
-applyUpgrade(upg.id, rarity.mult);
-document.getElementById('upgrade-modal').classList.add('hidden');
-gameState = 'PLAYING';
-};
-container.appendChild(card);
-});
-​document.getElementById('upgrade-modal').classList.remove('hidden');
-}
-​function applyUpgrade(id, rarityMult = 1.0) {
-try { audio.playClick(); } catch(e) {}
-player.upgradeLevels[id] = (player.upgradeLevels[id] || 0) + 1;
-​switch(id) {
-case 'PET_COMPANION':
-player.hasPet = true; player.petX = player.x - 35; player.petY = player.y - 15;
-break;
-case 'FROST_SHIELD':
-player.hasShield = true; player.shieldActive = true;
-break;
-case 'HEALTH_REGROWTH':
-player.healthRegrowth = true;
-break;
-case 'CRITICAL_FISH':
-player.critChance += 0.05 * rarityMult;
-break;
-case 'FROST_NOVA':
-player.hasNova = true;
-break;
-case 'DASH_WADDLE':
-player.hasDash = true;
-break;
-case 'FISH_MAGNET':
-player.magnetRadius += 45 * rarityMult;
-break;
-case 'ICE_ARMOR':
-player.armorReduction = Math.min(0.5, player.armorReduction + 0.08 * rarityMult);
-break;
-}
-}
-​// --- 13. UI & SHOP CONTROLLERS ---
-function updateHUD() {
-document.getElementById('hp-text').innerText = ${Math.ceil(player.hp)} / ${player.maxHp};
-document.getElementById('hp-bar').style.width = ${Math.max(0, (player.hp / player.maxHp) * 100)}%;
-document.getElementById('level-badge').innerText = LV. ${player.level};
-document.getElementById('xp-text').innerText = ${Math.round(player.xp)} / ${player.xpToNextLevel};
-document.getElementById('xp-bar').style.width = ${Math.min(100, (player.xp / player.xpToNextLevel) * 100)}%;
-document.getElementById('hud-coins').innerText = coinsEarnedThisRun;
-document.getElementById('menu-coins').innerText = totalCoins;
-document.getElementById('shop-coins').innerText = totalCoins;
-}
-​function getShopPrice(lvl) {
-const prices = [50, 100, 175, 275, 400];
-return prices[Math.min(lvl, prices.length - 1)];
-}
-​function updateShopUI() {
-document.getElementById('shop-hp-lvl').innerText = Lvl ${metaUpgrades.hpLvl || 0};
-document.getElementById('cost-hp').innerText = 🐟 ${getShopPrice(metaUpgrades.hpLvl || 0)};
-​document.getElementById('shop-dmg-lvl').innerText = Lvl ${metaUpgrades.dmgLvl || 0};
-document.getElementById('cost-dmg').innerText = 🐟 ${getShopPrice(metaUpgrades.dmgLvl || 0)};
-​document.getElementById('shop-spd-lvl').innerText = Lvl ${metaUpgrades.spdLvl || 0};
-document.getElementById('cost-spd').innerText = 🐟 ${getShopPrice(metaUpgrades.spdLvl || 0)};
-​document.getElementById('shop-aspd-lvl').innerText = Lvl ${metaUpgrades.aspdLvl || 0};
-document.getElementById('cost-aspd').innerText = 🐟 ${getShopPrice(metaUpgrades.aspdLvl || 0)};
-​document.getElementById('shop-crit-lvl').innerText = Lvl ${metaUpgrades.critLvl || 0};
-document.getElementById('cost-crit').innerText = 🐟 ${getShopPrice(metaUpgrades.critLvl || 0)};
-​document.getElementById('shop-xp-lvl').innerText = Lvl ${metaUpgrades.xpLvl || 0};
-document.getElementById('cost-xp').innerText = 🐟 ${getShopPrice(metaUpgrades.xpLvl || 0)};
-​document.getElementById('shop-coin-lvl').innerText = Lvl ${metaUpgrades.coinLvl || 0};
-document.getElementById('cost-coin').innerText = 🐟 ${getShopPrice(metaUpgrades.coinLvl || 0)};
-​document.getElementById('shop-coins').innerText = totalCoins;
-}
-​function buyMetaUpgrade(key) {
-let currentLvl = metaUpgrades[key] || 0;
-let price = getShopPrice(currentLvl);
-if (totalCoins >= price) {
-totalCoins -= price;
-metaUpgrades[key] = currentLvl + 1;
-Storage.set('coins', totalCoins);
-Storage.set('meta', metaUpgrades);
-try { audio.playLevelUp(); } catch(e) {}
-updateShopUI();
-}
-}
-​function buyHP() { buyMetaUpgrade('hpLvl'); }
-function buyDamage() { buyMetaUpgrade('dmgLvl'); }
-function buySpeed() { buyMetaUpgrade('spdLvl'); }
-function buyAttackSpeed() { buyMetaUpgrade('aspdLvl'); }
-function buyCritChance() { buyMetaUpgrade('critLvl'); }
-function buyXpBonus() { buyMetaUpgrade('xpLvl'); }
-function buyCoinBonus() { buyMetaUpgrade('coinLvl'); }
-​function openAreaSelect() {
-try { audio.init(); audio.playClick(); } catch(e) {}
-let container = document.getElementById('area-cards-container');
-container.innerHTML = '';
-​for (let a = 1; a <= 6; a++) {
-let cfg = AREAS_CONFIG[a];
-let isUnlocked = a <= maxUnlockedArea;
-​let card = document.createElement('div');
-card.className = glass-panel p-4 rounded-2xl border-2 ${isUnlocked ? 'border-sky-400/40 hover:border-sky-400 cursor-pointer btn-action' : 'border-slate-700 opacity-60 cursor-not-allowed'} flex justify-between items-center;
-card.innerHTML = <div> <div class="text-xs font-bold text-sky-400">AREA ${a}</div> <div class="font-fredoka text-lg text-amber-300">${cfg.name}</div> <div class="text-[11px] text-slate-400">Boss: ${cfg.boss}</div> </div> <div> ${isUnlocked ? '<span class="px-3 py-1 bg-emerald-600 text-white rounded-xl text-xs font-bold">START ➔</span>' : '🔒 LOCKED'} </div>;
-if (isUnlocked) {
-card.onclick = () => {
-currentArea = a;
-document.getElementById('area-select-modal').classList.add('hidden');
-startGame();
-};
-}
-container.appendChild(card);
-}
-​document.getElementById('main-menu').classList.add('hidden');
-document.getElementById('area-select-modal').classList.remove('hidden');
-}
-​function closeAreaSelect() {
-try { audio.init(); audio.playClick(); } catch(e) {}
-document.getElementById('area-select-modal').classList.add('hidden');
-document.getElementById('main-menu').classList.remove('hidden');
-}
-​function startGame() {
-document.getElementById('main-menu').classList.add('hidden');
-document.getElementById('hud-overlay').classList.remove('hidden');
-​currentRoom = 1;
-totalKills = 0;
-coinsEarnedThisRun = 0;
-player.reset();
-updateHUD();
-loadRoom(currentArea, currentRoom);
-gameState = 'PLAYING';
-​window.focus();
-}
-​function openShop() {
-try { audio.init(); audio.playClick(); } catch(e) {}
-updateShopUI();
-document.getElementById('main-menu').classList.add('hidden');
-document.getElementById('shop-modal').classList.remove('hidden');
-}
-​function closeShop() {
-try { audio.init(); audio.playClick(); } catch(e) {}
-document.getElementById('shop-modal').classList.add('hidden');
-document.getElementById('main-menu').classList.remove('hidden');
-}
-​function triggerGameOver() {
-gameState = 'GAMEOVER';
-totalCoins += coinsEarnedThisRun;
-Storage.set('coins', totalCoins);
-​document.getElementById('go-room').innerText = Area ${currentArea} - Room ${currentRoom};
-document.getElementById('go-level').innerText = Lvl ${player.level};
-document.getElementById('go-kills').innerText = totalKills;
-document.getElementById('go-coins').innerText = 🐟 ${coinsEarnedThisRun};
-document.getElementById('hud-overlay').classList.add('hidden');
-document.getElementById('gameover-modal').classList.remove('hidden');
-}
-​function triggerVictory() {
-gameState = 'VICTORY';
-totalCoins += coinsEarnedThisRun;
-Storage.set('coins', totalCoins);
-​document.getElementById('vic-level').innerText = Lvl ${player.level};
-document.getElementById('vic-coins').innerText = 🐟 ${coinsEarnedThisRun};
-document.getElementById('vic-kills').innerText = totalKills;
-document.getElementById('hud-overlay').classList.add('hidden');
-document.getElementById('victory-modal').classList.remove('hidden');
-}
-​function retryGame() {
-try { audio.init(); audio.playClick(); } catch(e) {}
-document.getElementById('gameover-modal').classList.add('hidden');
-startGame();
-}
-​function continueVictory() {
-try { audio.init(); audio.playClick(); } catch(e) {}
-document.getElementById('victory-modal').classList.add('hidden');
-document.getElementById('main-menu').classList.remove('hidden');
-updateHUD();
-}
-​function toggleSound() {
-audio.enabled = !audio.enabled;
-document.getElementById('btn-sound').innerText = audio.enabled ? '🔊' : '🔇';
-}
-​// --- 14. MAIN RENDER LOOP ---
-let lastTime = performance.now();
-let gameLoopRunning = false;
-​function gameLoop(now) {
-if (!now) now = performance.now();
-let dt = (now - lastTime) / 1000;
-if (isNaN(dt) || dt <= 0 || dt > 0.1) dt = 0.016;
-lastTime = now;
-​if (gameState === 'PLAYING') {
-gameTime += dt;
-​player.update(dt);
-​for (let i = projectiles.length - 1; i >= 0; i--) {
-projectiles[i].update(dt);
-if (projectiles[i].lifetime <= 0) projectiles.splice(i, 1);
-}
-​for (let i = enemyProjectiles.length - 1; i >= 0; i--) {
-enemyProjectiles[i].update(dt);
-if (enemyProjectiles[i].lifetime <= 0) enemyProjectiles.splice(i, 1);
-}
-​for (let i = enemies.length - 1; i >= 0; i--) {
-enemies[i].update(dt);
-if (enemies[i].hp <= 0) enemies.splice(i, 1);
-}
-​for (let i = drops.length - 1; i >= 0; i--) {
-drops[i].update(dt);
-if (drops[i].lifetime <= 0) drops.splice(i, 1);
-}
-​for (let i = telegraphs.length - 1; i >= 0; i--) {
-telegraphs[i].update(dt);
-if (telegraphs[i].timer <= 0) telegraphs.splice(i, 1);
-}
-​for (let i = effects.length - 1; i >= 0; i--) {
-effects[i].update(dt);
-if (effects[i].lifetime <= 0) effects.splice(i, 1);
-}
-​for (let i = particles.length - 1; i >= 0; i--) {
-particles[i].update(dt);
-if (particles[i].lifetime <= 0) particles.splice(i, 1);
-}
-​for (let i = floatingTexts.length - 1; i >= 0; i--) {
-floatingTexts[i].update(dt);
-if (floatingTexts[i].lifetime <= 0) floatingTexts.splice(i, 1);
-}
-​checkRoomClear();
-drawMiniMap();
-}
-​let shakeX = 0, shakeY = 0;
-if (cameraShake > 0) {
-shakeX = (Math.random() - 0.5) * cameraShake;
-shakeY = (Math.random() - 0.5) * cameraShake;
-cameraShake = Math.max(0, cameraShake - dt * 25);
-}
-​ctx.clearRect(0, 0, canvas.width, canvas.height);
-​ctx.save();
-ctx.translate(canvas.width / 2 - player.x + shakeX, canvas.height / 2 - player.y + shakeY);
-​const cfg = AREAS_CONFIG[currentArea];
-ctx.fillStyle = cfg.bg;
-ctx.fillRect(-800, -800, 1600, 1600);
-​ctx.strokeStyle = cfg.gridColor;
-ctx.lineWidth = 2;
-for (let x = -800; x <= 800; x += 100) {
-ctx.beginPath(); ctx.moveTo(x, -800); ctx.lineTo(x, 800); ctx.stroke();
-}
-for (let y = -800; y <= 800; y += 100) {
-ctx.beginPath(); ctx.moveTo(-800, y); ctx.lineTo(800, y); ctx.stroke();
-}
-​if (gameState === 'PLAYING' || gameState === 'UPGRADE_MENU' || gameState === 'TRANSITION' || gameState === 'ROOM_CLEAR') {
-for (let tel of telegraphs) tel.draw();
-for (let d of drops) d.draw();
-​let drawList = [player, ...enemies];
-drawList.sort((a, b) => a.y - b.y);
-​for (let obj of drawList) obj.draw();
-​for (let proj of projectiles) proj.draw();
-for (let eProj of enemyProjectiles) eProj.draw();
-for (let fx of effects) fx.draw();
-for (let p of particles) p.draw();
-for (let ft of floatingTexts) ft.draw();
-}
-​ctx.restore();
-​requestAnimationFrame(gameLoop);
-}
-​// --- 15. INPUT HANDLING & MOBILE VIRTUAL JOYSTICK ---
-window.addEventListener('keydown', (e) => {
-try { audio.init(); } catch(err) {}
-keys[e.key.toLowerCase()] = true;
-});
-window.addEventListener('keyup', (e) => {
-keys[e.key.toLowerCase()] = false;
-});
-​const joystickWrapper = document.getElementById('joystick-wrapper');
-const joystickCanvas = document.getElementById('joystickCanvas');
-const jCtx = joystickCanvas.getContext('2d');
-​function drawJoystick() {
-jCtx.clearRect(0, 0, 130, 130);
-jCtx.beginPath();
-jCtx.arc(65, 65, 50, 0, Math.PI * 2);
-jCtx.fillStyle = 'rgba(15, 23, 42, 0.5)';
-jCtx.fill();
-jCtx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
-jCtx.lineWidth = 3;
-jCtx.stroke();
-​jCtx.beginPath();
-jCtx.arc(joystickPos.x, joystickPos.y, 22, 0, Math.PI * 2);
-jCtx.fillStyle = '#38bdf8';
-jCtx.fill();
-}
-​window.addEventListener('touchstart', (e) => {
-try { audio.init(); } catch(err) {}
-if (gameState !== 'PLAYING') return;
-const touch = e.touches[0];
-if (touch.clientX < window.innerWidth * 0.65) {
-joystickWrapper.style.display = 'block';
-joystickWrapper.style.left = ${Math.max(10, Math.min(window.innerWidth - 140, touch.clientX - 65))}px;
-joystickWrapper.style.top = ${Math.max(10, Math.min(window.innerHeight - 140, touch.clientY - 65))}px;
-joystickActive = true;
-joystickPos = { x: 65, y: 65 };
-drawJoystick();
-}
-}, { passive: true });
-​window.addEventListener('touchmove', (e) => {
-if (!joystickActive) return;
-const touch = e.touches[0];
-const rect = joystickWrapper.getBoundingClientRect();
-let dx = touch.clientX - (rect.left + 65);
-let dy = touch.clientY - (rect.top + 65);
-let dist = Math.hypot(dx, dy);
-​if (dist > 45) {
-dx = (dx / dist) * 45;
-dy = (dy / dist) * 45;
-}
-​joystickPos = { x: 65 + dx, y: 65 + dy };
-touchInput = { x: dx / 45, y: dy / 45, active: true };
-drawJoystick();
-}, { passive: true });
-​window.addEventListener('touchend', () => {
-joystickActive = false;
-joystickPos = { x: 65, y: 65 };
-touchInput = { x: 0, y: 0, active: false };
-joystickWrapper.style.display = 'none';
-});
-​// Start Main App
-function startApp() {
-resizeCanvas();
-updateHUD();
-if (!gameLoopRunning) {
-gameLoopRunning = true;
-requestAnimationFrame(gameLoop);
-}
-}
-​if (document.readyState === 'complete' || document.readyState === 'interactive') {
-startApp();
-} else {
-document.addEventListener('DOMContentLoaded', startApp);
-window.addEventListener('load', startApp);
-}
-</script>
+<body class="relative flex items-center justify-center">
+
+    <!-- GAME CANVAS -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- UI OVERLAY LAYER -->
+    <div id="ui-layer" class="absolute inset-0 pointer-events-none flex flex-col justify-between p-3 md:p-6">
+        
+        <!-- HUD TOP -->
+        <div id="hud-top" class="flex justify-between items-start w-full">
+            <!-- PLAYER INFO & MINI-MAP -->
+            <div class="flex flex-col gap-2">
+                <div class="glass-panel p-3 rounded-2xl flex items-center gap-3 pointer-events-auto min-w-[200px]">
+                    <div class="text-3xl">🐧</div>
+                    <div class="flex-1">
+                        <div class="flex justify-between text-xs font-bold text-sky-200 mb-1">
+                            <span>MR. KARO</span>
+                            <span id="level-badge" class="text-amber-400">LV. 1</span>
+                        </div>
+                        <!-- HP BAR -->
+                        <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden border border-sky-900/50 mb-1">
+                            <div id="hp-bar" class="bg-gradient-to-r from-emerald-500 to-green-400 h-full w-full transition-all duration-200"></div>
+                        </div>
+                        <div class="flex justify-between text-[10px] text-slate-300 font-mono">
+                            <span id="hp-text">100 / 100</span>
+                        </div>
+                        <!-- XP BAR -->
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
+                            <div id="xp-bar" class="bg-gradient-to-r from-amber-500 to-yellow-300 h-full w-0 transition-all duration-200"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MINI-MAP CANVAS -->
+                <div class="glass-panel p-1.5 rounded-2xl pointer-events-auto w-[110px] h-[110px] relative overflow-hidden flex items-center justify-center border border-sky-500/30">
+                    <canvas id="minimapCanvas" width="100" height="100" class="rounded-xl"></canvas>
+                </div>
+            </div>
+
+            <!-- AREA / ROOM DISPLAY -->
+            <div id="room-info-card" class="glass-panel px-5 py-2.5 rounded-2xl text-center pointer-events-auto">
+                <div id="area-title" class="text-xs font-bold tracking-wider text-sky-400 uppercase">AREA 1: SNOWY SHORE</div>
+                <div id="room-title" class="text-lg font-black text-white">ROOM 1 / 5</div>
+            </div>
+
+            <!-- CURRENCY & AUDIO -->
+            <div class="flex items-center gap-2 pointer-events-auto">
+                <div class="glass-panel px-4 py-2 rounded-2xl flex items-center gap-2 font-bold text-amber-300">
+                    <span>🐟</span>
+                    <span id="coin-counter" class="font-mono">0</span>
+                </div>
+                <button id="btn-sound-toggle" class="glass-panel p-2.5 rounded-2xl text-lg btn-action hover:bg-slate-800/80">🔊</button>
+            </div>
+        </div>
+
+        <!-- BOSS HP BAR OVERLAY -->
+        <div id="boss-hp-container" class="hidden absolute top-16 left-1/2 -translate-x-1/2 w-11/12 max-w-md glass-panel p-3 rounded-2xl text-center pointer-events-auto border-red-500/40">
+            <div class="flex justify-between text-xs font-bold mb-1">
+                <span id="boss-name" class="text-red-400 uppercase tracking-wider">FROSTFANG</span>
+                <span id="boss-enraged-tag" class="hidden text-amber-400 animate-pulse font-extrabold">ENRAGED!</span>
+            </div>
+            <div class="w-full bg-slate-900 h-4 rounded-full overflow-hidden border border-red-900">
+                <div id="boss-hp-bar" class="bg-gradient-to-r from-red-600 to-amber-500 h-full w-full transition-all duration-150"></div>
+            </div>
+        </div>
+
+        <!-- MOBILE JOYSTICK AREA -->
+        <div id="joystick-zone" class="absolute left-6 bottom-6 w-32 h-32 pointer-events-auto md:hidden rounded-full border-2 border-sky-400/20 bg-sky-500/5 flex items-center justify-center">
+            <div id="joystick-knob" class="w-12 h-12 bg-sky-400/50 rounded-full border border-white/50 transition-transform duration-75"></div>
+        </div>
+    </div>
+
+    <!-- MODAL CONTAINERS -->
+    
+    <!-- MAIN MENU -->
+    <div id="modal-menu" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50">
+        <div class="text-center max-w-sm w-full">
+            <div class="text-6xl mb-2 animate-bounce">🐧</div>
+            <h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-blue-200 to-indigo-400 tracking-wider mb-1">PENGUIN</h1>
+            <h2 class="text-xl font-bold text-sky-200 tracking-widest mb-6 uppercase">FROZEN FRENZY</h2>
+
+            <div class="flex flex-col gap-3 w-full mb-6">
+                <button id="btn-main-play" class="w-full py-4 glass-panel bg-gradient-to-r from-sky-500 to-blue-600 text-white font-bold text-lg rounded-2xl btn-action border-sky-300/50 shadow-lg shadow-sky-500/20">MAIN SEKARANG</button>
+                <button id="btn-area-select" class="w-full py-3.5 glass-panel text-sky-200 font-bold rounded-2xl btn-action hover:bg-slate-800">PILIH AREA</button>
+                <button id="btn-shop" class="w-full py-3.5 glass-panel text-amber-300 font-bold rounded-2xl btn-action hover:bg-slate-800 flex items-center justify-center gap-2">
+                    <span>🛒 PERMANENT SHOP</span>
+                </button>
+            </div>
+
+            <div class="text-xs text-slate-400 font-mono">Petualangan 2.5D Mr. Karo di Kutub Selatan</div>
+        </div>
+    </div>
+
+    <!-- AREA SELECT MODAL -->
+    <div id="modal-area" class="hidden absolute inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50">
+        <div class="max-w-md w-full glass-panel p-6 rounded-3xl border-sky-400/30">
+            <h3 class="text-xl font-black text-sky-300 text-center mb-4">PILIH AREA PETUALANGAN</h3>
+            <div id="area-list" class="flex flex-col gap-3 max-h-[60vh] overflow-y-auto pr-1"></div>
+            <button id="btn-close-area" class="w-full mt-5 py-3 glass-panel text-slate-300 font-bold rounded-2xl btn-action">KEMBALI</button>
+        </div>
+    </div>
+
+    <!-- PERMANENT SHOP MODAL -->
+    <div id="modal-shop" class="hidden absolute inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50">
+        <div class="max-w-md w-full glass-panel p-6 rounded-3xl border-amber-400/30">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-black text-amber-400">UPGRADE MR. KARO</h3>
+                <div class="glass-panel px-3 py-1 rounded-xl text-amber-300 font-bold text-sm flex items-center gap-1">
+                    <span>🐟</span> <span id="shop-coin-count">0</span>
+                </div>
+            </div>
+            <div id="shop-items" class="flex flex-col gap-3 max-h-[55vh] overflow-y-auto pr-1"></div>
+            <button id="btn-close-shop" class="w-full mt-5 py-3 glass-panel text-slate-300 font-bold rounded-2xl btn-action">KEMBALI</button>
+        </div>
+    </div>
+
+    <!-- LEVEL UP / IN-RUN UPGRADE MODAL -->
+    <div id="modal-upgrade" class="hidden absolute inset-0 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50">
+        <div class="text-center max-w-lg w-full">
+            <div class="text-amber-400 font-black tracking-widest text-sm uppercase mb-1">PILIH 1 KEMAMPUAN</div>
+            <h2 class="text-3xl font-black text-white mb-6">LEVEL UP!</h2>
+            <div id="upgrade-cards" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+        </div>
+    </div>
+
+    <!-- ROOM CLEAR / REWARD MODAL -->
+    <div id="modal-room-clear" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 z-40">
+        <div class="glass-panel p-6 rounded-3xl max-w-xs w-full text-center border-emerald-400/40">
+            <div class="text-4xl mb-2">🧊</div>
+            <h3 class="text-2xl font-black text-emerald-400 mb-1">ROOM BERSIH!</h3>
+            <p class="text-xs text-slate-300 mb-4">Mendapatkan bonus pemulihan & koin</p>
+            <div class="space-y-2 mb-6 font-mono text-sm">
+                <div class="glass-panel py-2 rounded-xl text-emerald-300" id="rc-heal">+0 HP</div>
+                <div class="glass-panel py-2 rounded-xl text-amber-300" id="rc-coins">🐟 +0</div>
+                <div class="glass-panel py-2 rounded-xl text-sky-300" id="rc-xp">+0 XP</div>
+            </div>
+            <button id="btn-next-room" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold rounded-2xl btn-action shadow-lg shadow-emerald-500/20">LANJUT ROOM</button>
+        </div>
+    </div>
+
+    <!-- GAME OVER MODAL -->
+    <div id="modal-gameover" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50">
+        <div class="glass-panel p-6 rounded-3xl max-w-xs w-full text-center border-red-500/40">
+            <div class="text-5xl mb-2">💔</div>
+            <h3 class="text-2xl font-black text-red-500 mb-1">GAME OVER</h3>
+            <p class="text-xs text-slate-400 mb-4">Mr. Karo kehabisan tenaga...</p>
+            <div class="glass-panel p-3 rounded-2xl space-y-1 mb-6 text-xs text-slate-300 font-mono text-left">
+                <div class="flex justify-between"><span>Area Reached:</span> <span id="go-area" class="text-sky-300">1</span></div>
+                <div class="flex justify-between"><span>Room Reached:</span> <span id="go-room" class="text-sky-300">1</span></div>
+                <div class="flex justify-between"><span>Koin Ditemukan:</span> <span id="go-coins" class="text-amber-300">0</span></div>
+            </div>
+            <button id="btn-retry" class="w-full py-3.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white font-bold rounded-2xl btn-action">COBA LAGI</button>
+        </div>
+    </div>
+
+    <!-- VICTORY MODAL -->
+    <div id="modal-victory" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50">
+        <div class="glass-panel p-6 rounded-3xl max-w-xs w-full text-center border-amber-400/50">
+            <div class="text-5xl mb-2 animate-bounce">👑</div>
+            <h3 class="text-2xl font-black text-amber-400 mb-1">KEMENANGAN MUTLAK!</h3>
+            <p class="text-xs text-slate-300 mb-4">Mr. Karo berhasil menguasai seluruh Kutub!</p>
+            <button id="btn-victory-main" class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black rounded-2xl btn-action">MENU UTAMA</button>
+        </div>
+    </div>
+
+    <!-- GAME LOGIC SCRIPT -->
+    <script>
+        // === AUDIO ENGINE ===
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+            playTone(freq, duration, type = 'sine', vol = 0.1) {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {}
+            }
+            playThrow() { this.playTone(400, 0.08, 'sine', 0.08); }
+            playHit() { this.playTone(180, 0.1, 'triangle', 0.15); }
+            playCrit() { this.playTone(600, 0.15, 'square', 0.12); }
+            playKill() { this.playTone(220, 0.2, 'sawtooth', 0.1); }
+            playLevelUp() {
+                this.playTone(300, 0.1, 'sine', 0.1);
+                setTimeout(() => this.playTone(500, 0.2, 'sine', 0.1), 80);
+            }
+            playBossWarning() { this.playTone(120, 0.4, 'sawtooth', 0.2); }
+            playClick() { this.playTone(500, 0.04, 'sine', 0.05); }
+        }
+
+        const audio = new SoundEngine();
+
+        // === SAVE SYSTEM (LOCALSTORAGE SAFE) ===
+        const SAVE_KEY = 'PENGUIN_FROZEN_FRENZY_DATA';
+        let saveData = {
+            coins: 0,
+            unlockedArea: 1,
+            upgrades: { hp: 0, dmg: 0, speed: 0, atkSpd: 0, crit: 0, xpGain: 0, coinGain: 0 }
+        };
+
+        function loadSavedData() {
+            try {
+                const raw = localStorage.getItem(SAVE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    saveData = { ...saveData, ...parsed, upgrades: { ...saveData.upgrades, ...(parsed.upgrades || {}) } };
+                }
+            } catch (e) {
+                console.warn("Storage restricted", e);
+            }
+        }
+
+        function saveGameData() {
+            try {
+                localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+            } catch (e) {}
+        }
+
+        loadSavedData();
+
+        // === GAME CONFIGURATIONS ===
+        const AREA_CONFIGS = {
+            1: { name: 'SNOWY SHORE', bg: '#0f172a', floor: '#1e293b', accent: '#38bdf8', enemyPool: ['FOX', 'SEAL'], boss: 'FROSTFANG' },
+            2: { name: 'FROZEN TUNDRA', bg: '#082f49', floor: '#0c4a6e', accent: '#0284c7', enemyPool: ['FOX', 'WOLF', 'SEAL'], boss: 'ARCTIC ALPHA' },
+            3: { name: 'ICE CAVERN', bg: '#172554', floor: '#1e3a8a', accent: '#60a5fa', enemyPool: ['OWL', 'CRAWLER', 'WALRUS'], boss: 'GLACIER GOLEM' },
+            4: { name: 'FROZEN FOREST', bg: '#064e3b', floor: '#065f46', accent: '#34d399', enemyPool: ['WOLF', 'BAT', 'OWL'], boss: 'SNOW OWL KING' },
+            5: { name: 'GLACIER VALLEY', bg: '#311042', floor: '#4a1d6d', accent: '#c084fc', enemyPool: ['WALRUS', 'BEAR', 'GOLEM'], boss: 'MAMMOTH PRIME' },
+            6: { name: 'FROZEN FORTRESS', bg: '#2e1065', floor: '#3b0764', accent: '#e879f9', enemyPool: ['CRAWLER', 'BAT', 'BEAR', 'GOLEM'], boss: 'FROST KING' }
+        };
+
+        const ENEMY_STATS = {
+            FOX: { name: 'Arctic Fox', hp: 40, speed: 2.4, size: 16, xp: 10, color: '#f97316' },
+            SEAL: { name: 'Seal', hp: 70, speed: 1.4, size: 20, xp: 15, color: '#94a3b8' },
+            WOLF: { name: 'Arctic Wolf', hp: 90, speed: 2.0, size: 18, xp: 20, color: '#cbd5e1' },
+            OWL: { name: 'Snow Owl', hp: 50, speed: 1.6, size: 15, xp: 22, color: '#e2e8f0', ranged: true },
+            CRAWLER: { name: 'Ice Crawler', hp: 60, speed: 2.8, size: 14, xp: 18, color: '#38bdf8' },
+            WALRUS: { name: 'Walrus', hp: 160, speed: 1.0, size: 26, xp: 30, color: '#64748b' },
+            BEAR: { name: 'Polar Bear', hp: 220, speed: 1.2, size: 28, xp: 45, color: '#f8fafc' },
+            GOLEM: { name: 'Ice Golem', hp: 320, speed: 0.8, size: 32, xp: 60, color: '#0284c7' },
+            BAT: { name: 'Frost Bat', hp: 45, speed: 3.0, size: 13, xp: 15, color: '#a855f7' }
+        };
+
+        const BOSS_STATS = {
+            'FROSTFANG': { name: 'Frostfang', hp: 900, size: 40, xp: 200, color: '#38bdf8' },
+            'ARCTIC ALPHA': { name: 'Arctic Alpha', hp: 1400, size: 42, xp: 300, color: '#e2e8f0' },
+            'GLACIER GOLEM': { name: 'Glacier Golem', hp: 2000, size: 48, xp: 450, color: '#0284c7' },
+            'SNOW OWL KING': { name: 'Snow Owl King', hp: 2600, size: 44, xp: 600, color: '#f8fafc' },
+            'MAMMOTH PRIME': { name: 'Mammoth Prime', hp: 3500, size: 52, xp: 800, color: '#c084fc' },
+            'FROST KING': { name: 'Frost King', hp: 5000, size: 55, xp: 1200, color: '#e879f9' }
+        };
+
+        const UPGRADES_LIST = [
+            { id: 'FROZEN_FISH', name: 'Frozen Fish', desc: 'Serangan memberikan efek lambat (slow).', rarity: 'COMMON' },
+            { id: 'TWIN_SALMON', name: 'Twin Salmon', desc: 'Melempar proyeksil ikan tambahan.', rarity: 'RARE' },
+            { id: 'HEAVY_TROUT', name: 'Heavy Trout', desc: 'Meningkatkan Damage & Knockback.', rarity: 'COMMON' },
+            { id: 'RAPID_TUNA', name: 'Rapid Tuna', desc: 'Meningkatkan kecepatan melempar.', rarity: 'COMMON' },
+            { id: 'DRILL_MACKEREL', name: 'Drill Mackerel', desc: 'Ikan menembus musuh.', rarity: 'RARE' },
+            { id: 'RICOCHET_COD', name: 'Ricochet Cod', desc: 'Ikan memantul ke musuh sekitar.', rarity: 'EPIC' },
+            { id: 'ICE_BURST', name: 'Ice Burst', desc: 'Musuh mati meledakkan pecahan es.', rarity: 'RARE' },
+            { id: 'BABY_PENGUIN', name: 'Baby Companion', desc: 'Penguin kecil membantu melempar ikan.', rarity: 'EPIC' },
+            { id: 'FROST_SHIELD', name: 'Frost Shield', desc: 'Perisai yang menyerap serangan musuh.', rarity: 'EPIC' },
+            { id: 'HEALTH_REGROWTH', name: 'Health Regrowth', desc: 'Memulihkan HP setiap selesai room.', rarity: 'COMMON' },
+            { id: 'CRITICAL_FISH', name: 'Critical Fish', desc: 'Meningkatkan peluang Critical Hit.', rarity: 'RARE' },
+            { id: 'FROST_NOVA', name: 'Frost Nova', desc: 'Mengeluarkan ledakan es berkala.', rarity: 'LEGENDARY' },
+            { id: 'FISH_MAGNET', name: 'Fish Magnet', desc: 'Memperbesar jangkauan mengambil XP & Koin.', rarity: 'COMMON' },
+            { id: 'ICE_ARMOR', name: 'Ice Armor', desc: 'Mengurangi damage yang diterima Mr. Karo.', rarity: 'RARE' }
+        ];
+
+        // === CANVAS & GLOBAL STATE ===
+        let canvas, ctx, minimapCanvas, minimapCtx;
+        let camera = { x: 0, y: 0, shake: 0 };
+        let currentArea = 1;
+        let currentRoom = 1;
+        let isGameRunning = false;
+        let isPaused = false;
+        let lastTime = 0;
+
+        let player;
+        let enemies = [];
+        let projectiles = [];
+        let particles = [];
+        let floatingTexts = [];
+        let activeBoss = null;
+
+        // Joystick State
+        let joystickActive = false;
+        let joystickVector = { x: 0, y: 0 };
+        let joystickOrigin = { x: 0, y: 0 };
+
+        // Key State
+        const keys = {};
+
+        // === CLASSES ===
+        class Player {
+            constructor() {
+                this.x = 0;
+                this.y = 0;
+                this.radius = 18;
+                this.level = 1;
+                this.xp = 0;
+                this.xpToNextLevel = 50;
+
+                // Stats from Shop
+                const pHp = saveData.upgrades.hp * 15;
+                const pDmg = saveData.upgrades.dmg * 5;
+                const pSpd = saveData.upgrades.speed * 0.3;
+                const pAtkSpd = saveData.upgrades.atkSpd * 0.08;
+                const pCrit = saveData.upgrades.crit * 0.03;
+
+                this.maxHp = 100 + pHp;
+                this.hp = this.maxHp;
+                this.speed = 3.4 + pSpd;
+                this.damage = 25 + pDmg;
+                this.attackCooldown = Math.max(0.2, 0.55 - pAtkSpd);
+                this.attackTimer = 0;
+                this.critChance = 0.20 + pCrit;
+                this.damageReduction = 0;
+                this.pickupRadius = 70;
+
+                // In-Run Upgrades Levels
+                this.upgrades = {};
+
+                // Special Upgrade States
+                this.shieldActive = false;
+                this.shieldCooldown = 0;
+                this.petTimer = 0;
+                this.petX = 0;
+                this.petY = 0;
+                this.novaTimer = 0;
+
+                this.squashX = 1;
+                this.squashY = 1;
+            }
+
+            update(dt) {
+                // Movement
+                let moveX = 0;
+                let moveY = 0;
+
+                if (keys['KeyW'] || keys['ArrowUp']) moveY -= 1;
+                if (keys['KeyS'] || keys['ArrowDown']) moveY += 1;
+                if (keys['KeyA'] || keys['ArrowLeft']) moveX -= 1;
+                if (keys['KeyD'] || keys['ArrowRight']) moveX += 1;
+
+                if (joystickActive) {
+                    moveX = joystickVector.x;
+                    moveY = joystickVector.y;
+                }
+
+                const len = Math.hypot(moveX, moveY);
+                if (len > 0) {
+                    const normX = moveX / (len > 1 ? len : 1);
+                    const normY = moveY / (len > 1 ? len : 1);
+                    this.x += normX * this.speed * dt * 60;
+                    this.y += normY * this.speed * dt * 60;
+
+                    this.squashX = 1 + Math.sin(Date.now() * 0.015) * 0.1;
+                    this.squashY = 1 - Math.sin(Date.now() * 0.015) * 0.1;
+                } else {
+                    this.squashX = 1;
+                    this.squashY = 1;
+                }
+
+                // Attack Auto
+                this.attackTimer -= dt;
+                if (this.attackTimer <= 0) {
+                    this.autoAttack();
+                    this.attackTimer = this.attackCooldown;
+                }
+
+                // Frost Shield Recharge
+                const shieldLvl = this.upgrades['FROST_SHIELD'] || 0;
+                if (shieldLvl > 0 && !this.shieldActive) {
+                    this.shieldCooldown -= dt;
+                    if (this.shieldCooldown <= 0) {
+                        this.shieldActive = true;
+                        spawnFloatingText(this.x, this.y - 30, 'PERISAI SIAP!', '#38bdf8', false);
+                    }
+                }
+
+                // Baby Penguin Companion Logic
+                const petLvl = this.upgrades['BABY_PENGUIN'] || 0;
+                if (petLvl > 0) {
+                    this.petX += (this.x - 30 - this.petX) * 0.1;
+                    this.petY += (this.y - 15 - this.petY) * 0.1;
+                    this.petTimer -= dt;
+
+                    const interval = petLvl === 1 ? 1.5 : (petLvl === 2 ? 0.9 : 0.7);
+                    if (this.petTimer <= 0) {
+                        this.petTimer = interval;
+                        const target = findNearestEnemy(this.petX, this.petY);
+                        if (target) {
+                            const angle = Math.atan2(target.y - this.petY, target.x - this.petX);
+                            projectiles.push(new FishProjectile(this.petX, this.petY, angle, this.damage * 0.5, true));
+                        }
+                    }
+                }
+
+                // Frost Nova
+                const novaLvl = this.upgrades['FROST_NOVA'] || 0;
+                if (novaLvl > 0) {
+                    this.novaTimer += dt;
+                    if (this.novaTimer >= 4.0) {
+                        this.novaTimer = 0;
+                        this.triggerFrostNova(novaLvl);
+                    }
+                }
+            }
+
+            triggerFrostNova(lvl) {
+                const radius = 120 + lvl * 30;
+                audio.playHit();
+                addCameraShake(3);
+                spawnParticles(this.x, this.y, '#38bdf8', 30);
+                enemies.forEach(e => {
+                    if (Math.hypot(e.x - this.x, e.y - this.y) <= radius) {
+                        e.takeDamage(this.damage * (0.8 + lvl * 0.2), false);
+                        e.applySlow(0.5, 3.0);
+                    }
+                });
+            }
+
+            autoAttack() {
+                const target = findNearestEnemy(this.x, this.y);
+                if (!target) return;
+
+                const angle = Math.atan2(target.y - this.y, target.x - this.x);
+                audio.playThrow();
+
+                const twinLvl = this.upgrades['TWIN_SALMON'] || 0;
+                const count = 1 + twinLvl;
+                const spread = 0.18;
+
+                for (let i = 0; i < count; i++) {
+                    const offset = (i - (count - 1) / 2) * spread;
+                    projectiles.push(new FishProjectile(this.x, this.y, angle + offset, this.damage));
+                }
+            }
+
+            takeDamage(amt) {
+                if (this.shieldActive) {
+                    this.shieldActive = false;
+                    const shieldLvl = this.upgrades['FROST_SHIELD'] || 1;
+                    this.shieldCooldown = shieldLvl === 1 ? 15 : (shieldLvl === 2 ? 10 : 6);
+                    spawnParticles(this.x, this.y, '#38bdf8', 20);
+                    spawnFloatingText(this.x, this.y - 30, 'BLOCKED!', '#38bdf8', true);
+                    return;
+                }
+
+                const actualDamage = Math.max(1, amt * (1 - this.damageReduction));
+                this.hp -= actualDamage;
+                audio.playHit();
+                addCameraShake(4);
+                spawnParticles(this.x, this.y, '#ef4444', 12);
+                spawnFloatingText(this.x, this.y - 25, `-${Math.round(actualDamage)}`, '#ef4444');
+
+                updateHUD();
+
+                if (this.hp <= 0) {
+                    this.hp = 0;
+                    triggerGameOver();
+                }
+            }
+
+            addXP(amount) {
+                const gainBonus = 1 + (saveData.upgrades.xpGain * 0.1);
+                const actualXP = amount * gainBonus;
+                this.xp += actualXP;
+                spawnFloatingText(this.x, this.y - 20, `+${Math.round(actualXP)} XP`, '#f59e0b');
+
+                if (this.xp >= this.xpToNextLevel) {
+                    this.xp -= this.xpToNextLevel;
+                    this.level++;
+                    this.xpToNextLevel = Math.round(this.xpToNextLevel * 1.35);
+                    audio.playLevelUp();
+                    spawnParticles(this.x, this.y, '#f59e0b', 30);
+                    triggerLevelUpModal();
+                }
+                updateHUD();
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                // Oval Shadow
+                ctx.beginPath();
+                ctx.ellipse(0, 16, 18, 8, 0, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.fill();
+
+                // Frost Shield Aura
+                if (this.shieldActive) {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 26 + Math.sin(Date.now() * 0.008) * 3, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                    ctx.fillStyle = 'rgba(56, 189, 248, 0.15)';
+                    ctx.fill();
+                }
+
+                // Character Model (Mr. Karo)
+                ctx.scale(this.squashX, this.squashY);
+
+                // Body (Black)
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 16, 18, 0, 0, Math.PI * 2);
+                ctx.fillStyle = '#0f172a';
+                ctx.fill();
+
+                // Belly (White)
+                ctx.beginPath();
+                ctx.ellipse(0, 3, 11, 13, 0, 0, Math.PI * 2);
+                ctx.fillStyle = '#f8fafc';
+                ctx.fill();
+
+                // Eyes
+                ctx.fillStyle = '#0f172a';
+                ctx.beginPath(); ctx.arc(-5, -5, 2.5, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(5, -5, 2.5, 0, Math.PI * 2); ctx.fill();
+
+                // Beak (Orange)
+                ctx.fillStyle = '#f97316';
+                ctx.beginPath();
+                ctx.moveTo(-4, -1);
+                ctx.lineTo(4, -1);
+                ctx.lineTo(0, 5);
+                ctx.closePath();
+                ctx.fill();
+
+                // Feet
+                ctx.fillStyle = '#ea580c';
+                ctx.beginPath(); ctx.arc(-7, 16, 4, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(7, 16, 4, 0, Math.PI * 2); ctx.fill();
+
+                ctx.restore();
+
+                // Draw Companion (Pet)
+                if (this.upgrades['BABY_PENGUIN'] > 0) {
+                    ctx.save();
+                    ctx.translate(this.petX, this.petY);
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 9, 0, Math.PI * 2);
+                    ctx.fillStyle = '#38bdf8';
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(0, 1, 6, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+        }
+
+        class FishProjectile {
+            constructor(x, y, angle, baseDamage, isPet = false) {
+                this.x = x;
+                this.y = y;
+                this.angle = angle;
+                this.speed = 8.5;
+                this.radius = isPet ? 6 : 9;
+                this.isPet = isPet;
+
+                const heavyLvl = player.upgrades['HEAVY_TROUT'] || 0;
+                this.damage = baseDamage + (heavyLvl * 10);
+                this.knockback = 4 + heavyLvl * 3;
+
+                this.pierceLeft = player.upgrades['DRILL_MACKEREL'] || 0;
+                this.bounceLeft = player.upgrades['RICOCHET_COD'] || 0;
+
+                this.hitEnemies = new Set();
+                this.rotation = 0;
+                this.dead = false;
+            }
+
+            update(dt) {
+                this.x += Math.cos(this.angle) * this.speed * dt * 60;
+                this.y += Math.sin(this.angle) * this.speed * dt * 60;
+                this.rotation += 0.25;
+
+                // Motion Particle
+                if (Math.random() < 0.4) {
+                    particles.push({
+                        x: this.x, y: this.y,
+                        vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5,
+                        size: 2, color: '#a5f3fc', life: 0.2
+                    });
+                }
+
+                // Out of Bounds Cleanup
+                if (Math.abs(this.x - player.x) > 600 || Math.abs(this.y - player.y) > 600) {
+                    this.dead = true;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+
+                // Fish Silhouette
+                ctx.fillStyle = this.isPet ? '#93c5fd' : '#38bdf8';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, this.radius * 1.5, this.radius * 0.8, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Tail
+                ctx.beginPath();
+                ctx.moveTo(-this.radius * 1.2, 0);
+                ctx.lineTo(-this.radius * 2, -this.radius * 0.6);
+                ctx.lineTo(-this.radius * 2, this.radius * 0.6);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        class Enemy {
+            constructor(typeKey, isElite = false) {
+                const config = ENEMY_STATS[typeKey];
+                this.typeKey = typeKey;
+                this.name = config.name;
+                this.isElite = isElite;
+
+                const areaMult = 1 + (currentArea - 1) * 0.4;
+                this.maxHp = config.hp * areaMult * (isElite ? 2.5 : 1);
+                this.hp = this.maxHp;
+                this.speed = config.speed * (isElite ? 1.15 : 1);
+                this.size = config.size * (isElite ? 1.3 : 1);
+                this.xp = config.xp * (isElite ? 2.5 : 1);
+                this.color = config.color;
+
+                this.x = 0;
+                this.y = 0;
+                this.slowFactor = 1;
+                this.slowTimer = 0;
+                this.dead = false;
+            }
+
+            applySlow(factor, duration) {
+                this.slowFactor = Math.min(this.slowFactor, factor);
+                this.slowTimer = duration;
+            }
+
+            takeDamage(amount, canCrit = true) {
+                let finalDamage = amount;
+                let isCrit = false;
+
+                if (canCrit && Math.random() < player.critChance) {
+                    isCrit = true;
+                    finalDamage *= 1.5;
+                }
+
+                this.hp -= finalDamage;
+
+                if (isCrit) {
+                    audio.playCrit();
+                    spawnFloatingText(this.x, this.y - 25, `${Math.round(finalDamage)}!`, '#f59e0b', true);
+                    spawnParticles(this.x, this.y, '#f59e0b', 12);
+                } else {
+                    audio.playHit();
+                    spawnFloatingText(this.x, this.y - 20, `${Math.round(finalDamage)}`, '#ffffff');
+                    spawnParticles(this.x, this.y, '#bae6fd', 6);
+                }
+
+                if (this.hp <= 0 && !this.dead) {
+                    this.dead = true;
+                    audio.playKill();
+                    player.addXP(this.xp);
+
+                    // Drop Coins
+                    const coinBonus = 1 + (saveData.upgrades.coinGain * 0.15);
+                    const baseCoins = this.isElite ? Math.floor(Math.random() * 5) + 5 : Math.floor(Math.random() * 3) + 1;
+                    const finalCoins = Math.round(baseCoins * coinBonus);
+                    saveData.coins += finalCoins;
+
+                    spawnParticles(this.x, this.y, '#f59e0b', 16);
+
+                    // Ice Burst Upgrade Effect
+                    const burstLvl = player.upgrades['ICE_BURST'] || 0;
+                    if (burstLvl > 0) {
+                        const shards = burstLvl * 3;
+                        for (let i = 0; i < shards; i++) {
+                            const a = (Math.PI * 2 / shards) * i;
+                            projectiles.push(new FishProjectile(this.x, this.y, a, player.damage * 0.4, true));
+                        }
+                    }
+                }
+            }
+
+            update(dt) {
+                if (this.slowTimer > 0) {
+                    this.slowTimer -= dt;
+                    if (this.slowTimer <= 0) this.slowFactor = 1;
+                }
+
+                const effSpeed = this.speed * this.slowFactor;
+                const angle = Math.atan2(player.y - this.y, player.x - this.x);
+                this.x += Math.cos(angle) * effSpeed * dt * 60;
+                this.y += Math.sin(angle) * effSpeed * dt * 60;
+
+                // Player Collision
+                const dist = Math.hypot(player.x - this.x, player.y - this.y);
+                if (dist < this.size + player.radius) {
+                    player.takeDamage(12 * (1 + currentArea * 0.2));
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                // Shadow
+                ctx.beginPath();
+                ctx.ellipse(0, this.size * 0.7, this.size, this.size * 0.4, 0, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0,0,0,0.25)';
+                ctx.fill();
+
+                // Elite Aura
+                if (this.isElite) {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.size + 6, 0, Math.PI * 2);
+                    ctx.strokeStyle = '#f59e0b';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+
+                // Enemy Body
+                ctx.beginPath();
+                ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+
+                // Eyes
+                ctx.fillStyle = '#0f172a';
+                ctx.beginPath(); ctx.arc(-this.size * 0.3, -this.size * 0.2, 3, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(this.size * 0.3, -this.size * 0.2, 3, 0, Math.PI * 2); ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        class BossEnemy {
+            constructor(bossKey) {
+                const config = BOSS_STATS[bossKey];
+                this.key = bossKey;
+                this.name = config.name;
+                this.maxHp = config.hp * (1 + (currentArea - 1) * 0.5);
+                this.hp = this.maxHp;
+                this.size = config.size;
+                this.xp = config.xp;
+                this.color = config.color;
+
+                this.x = 0;
+                this.y = -250;
+                this.speed = 1.3;
+                this.enraged = false;
+                this.dead = false;
+
+                this.attackTimer = 2.0;
+            }
+
+            takeDamage(amount) {
+                this.hp -= amount;
+                audio.playHit();
+                spawnFloatingText(this.x, this.y - 40, `${Math.round(amount)}`, '#f43f5e', true);
+
+                if (this.hp <= this.maxHp * 0.5 && !this.enraged) {
+                    this.enraged = true;
+                    this.speed *= 1.3;
+                    audio.playBossWarning();
+                    const tag = document.getElementById('boss-enraged-tag');
+                    if (tag) tag.classList.remove('hidden');
+                }
+
+                updateBossHUD();
+
+                if (this.hp <= 0 && !this.dead) {
+                    this.dead = true;
+                    audio.playKill();
+                    player.addXP(this.xp);
+                    saveData.coins += 50 * currentArea;
+                    addCameraShake(10);
+                }
+            }
+
+            update(dt) {
+                const angle = Math.atan2(player.y - this.y, player.x - this.x);
+                this.x += Math.cos(angle) * this.speed * dt * 60;
+                this.y += Math.sin(angle) * this.speed * dt * 60;
+
+                const dist = Math.hypot(player.x - this.x, player.y - this.y);
+                if (dist < this.size + player.radius) {
+                    player.takeDamage(25);
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                ctx.beginPath();
+                ctx.ellipse(0, this.size * 0.8, this.size * 1.1, this.size * 0.4, 0, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0,0,0,0.35)';
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        // === GAME ENGINE FUNCTIONS ===
+        function initGame() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            minimapCanvas = document.getElementById('minimapCanvas');
+            minimapCtx = minimapCanvas.getContext('2d');
+
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            setupControls();
+            setupUIEvents();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function resizeCanvas() {
+            if (!canvas) return;
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function startNewRun(areaNum = 1) {
+            currentArea = areaNum;
+            currentRoom = 1;
+            player = new Player();
+            enemies = [];
+            projectiles = [];
+            particles = [];
+            floatingTexts = [];
+            activeBoss = null;
+
+            isGameRunning = true;
+            isPaused = false;
+
+            hideAllModals();
+            spawnRoomEnemies();
+            updateHUD();
+        }
+
+        function spawnRoomEnemies() {
+            enemies = [];
+            activeBoss = null;
+            const areaCfg = AREA_CONFIGS[currentArea];
+
+            const bossContainer = document.getElementById('boss-hp-container');
+            if (bossContainer) bossContainer.classList.add('hidden');
+
+            if (currentRoom === 5) {
+                // Boss Room
+                activeBoss = new BossEnemy(areaCfg.boss);
+                if (bossContainer) bossContainer.classList.remove('hidden');
+                updateBossHUD();
+            } else {
+                // Normal Enemy Waves
+                const count = 3 + currentRoom + currentArea;
+                for (let i = 0; i < count; i++) {
+                    const pool = areaCfg.enemyPool;
+                    const type = pool[Math.floor(Math.random() * pool.length)];
+                    const isElite = Math.random() < 0.15;
+                    const e = new Enemy(type, isElite);
+
+                    // Spawn away from player
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = 250 + Math.random() * 200;
+                    e.x = player.x + Math.cos(angle) * dist;
+                    e.y = player.y + Math.sin(angle) * dist;
+
+                    enemies.push(e);
+                }
+            }
+        }
+
+        function findNearestEnemy(x, y) {
+            let nearest = null;
+            let minDist = Infinity;
+
+            if (activeBoss && !activeBoss.dead) {
+                return activeBoss;
+            }
+
+            enemies.forEach(e => {
+                if (!e.dead) {
+                    const d = Math.hypot(e.x - x, e.y - y);
+                    if (d < minDist) {
+                        minDist = d;
+                        nearest = e;
+                    }
+                }
+            });
+            return nearest;
+        }
+
+        function addCameraShake(amt) {
+            camera.shake = Math.max(camera.shake, amt);
+        }
+
+        function spawnParticles(x, y, color, count = 8) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x, y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    color,
+                    size: 3 + Math.random() * 3,
+                    life: 0.4 + Math.random() * 0.3
+                });
+            }
+        }
+
+        function spawnFloatingText(x, y, text, color = '#ffffff', isBig = false) {
+            floatingTexts.push({
+                x, y, text, color, isBig,
+                vy: -1.2,
+                alpha: 1.0,
+                life: 0.8
+            });
+        }
+
+        function checkRoomCompletion() {
+            if (!isGameRunning || isPaused) return;
+
+            const bossDead = activeBoss ? activeBoss.dead : true;
+            const enemiesDead = enemies.every(e => e.dead);
+
+            if (bossDead && enemiesDead) {
+                isPaused = true;
+
+                // Health Regrowth Upgrade
+                const regrowthLvl = player.upgrades['HEALTH_REGROWTH'] || 0;
+                let healAmt = 0;
+                if (regrowthLvl > 0) {
+                    const pct = regrowthLvl * 0.05;
+                    healAmt = Math.round(player.maxHp * pct);
+                    player.hp = Math.min(player.maxHp, player.hp + healAmt);
+                }
+
+                const bonusCoins = 10 + currentRoom * 2;
+                const bonusXP = 20 + currentRoom * 5;
+
+                saveData.coins += bonusCoins;
+                player.addXP(bonusXP);
+                saveGameData();
+
+                document.getElementById('rc-heal').innerText = `+${healAmt} HP`;
+                document.getElementById('rc-coins').innerText = `🐟 +${bonusCoins}`;
+                document.getElementById('rc-xp').innerText = `+${bonusXP} XP`;
+                document.getElementById('modal-room-clear').classList.remove('hidden');
+            }
+        }
+
+        // === GAME LOOP ===
+        function gameLoop(timestamp) {
+            const dt = Math.min(0.05, (timestamp - lastTime) / 1000 || 0.016);
+            lastTime = timestamp;
+
+            if (isGameRunning && !isPaused) {
+                // Update Player
+                player.update(dt);
+
+                // Camera Follow Smoothly
+                camera.x += (player.x - camera.x) * 0.1;
+                camera.y += (player.y - camera.y) * 0.1;
+
+                if (camera.shake > 0) {
+                    camera.shake -= dt * 15;
+                    if (camera.shake < 0) camera.shake = 0;
+                }
+
+                // Update Projectiles
+                projectiles.forEach(p => p.update(dt));
+                projectiles = projectiles.filter(p => !p.dead);
+
+                // Projectile Collision
+                projectiles.forEach(p => {
+                    const targets = activeBoss ? [activeBoss] : enemies;
+                    targets.forEach(e => {
+                        if (!e.dead && !p.hitEnemies.has(e)) {
+                            const dist = Math.hypot(e.x - p.x, e.y - p.y);
+                            if (dist < e.size + p.radius) {
+                                p.hitEnemies.add(e);
+                                e.takeDamage(p.damage);
+
+                                // Slow Effect
+                                const frozenLvl = player.upgrades['FROZEN_FISH'] || 0;
+                                if (frozenLvl > 0) {
+                                    e.applySlow(1 - (0.15 + frozenLvl * 0.1), 2.0);
+                                }
+
+                                if (p.pierceLeft > 0) {
+                                    p.pierceLeft--;
+                                } else {
+                                    p.dead = true;
+                                }
+                            }
+                        }
+                    });
+                });
+
+                // Update Enemies
+                if (activeBoss && !activeBoss.dead) activeBoss.update(dt);
+                enemies.forEach(e => {
+                    if (!e.dead) e.update(dt);
+                });
+
+                // Update Particles
+                particles.forEach(pt => {
+                    pt.x += pt.vx;
+                    pt.y += pt.vy;
+                    pt.life -= dt;
+                });
+                particles = particles.filter(pt => pt.life > 0);
+
+                // Update Floating Texts
+                floatingTexts.forEach(ft => {
+                    ft.y += ft.vy;
+                    ft.life -= dt;
+                    ft.alpha = Math.max(0, ft.life / 0.8);
+                });
+                floatingTexts = floatingTexts.filter(ft => ft.life > 0);
+
+                checkRoomCompletion();
+            }
+
+            // Render
+            render();
+            renderMinimap();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function render() {
+            if (!ctx) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const areaCfg = AREA_CONFIGS[currentArea];
+
+            // Camera Transform
+            ctx.save();
+            const shakeX = (Math.random() - 0.5) * camera.shake * 4;
+            const shakeY = (Math.random() - 0.5) * camera.shake * 4;
+            ctx.translate(canvas.width / 2 - camera.x + shakeX, canvas.height / 2 - camera.y + shakeY);
+
+            // Floor Rendering (Grid Illusion)
+            ctx.fillStyle = areaCfg.floor;
+            ctx.fillRect(player.x - 1000, player.y - 1000, 2000, 2000);
+
+            // Grid Lines
+            ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+            ctx.lineWidth = 2;
+            const gridSize = 80;
+            const startX = Math.floor((player.x - 1000) / gridSize) * gridSize;
+            const startY = Math.floor((player.y - 1000) / gridSize) * gridSize;
+
+            for (let x = startX; x < player.x + 1000; x += gridSize) {
+                ctx.beginPath(); ctx.moveTo(x, player.y - 1000); ctx.lineTo(x, player.y + 1000); ctx.stroke();
+            }
+            for (let y = startY; y < player.y + 1000; y += gridSize) {
+                ctx.beginPath(); ctx.moveTo(player.x - 1000, y); ctx.lineTo(player.x + 1000, y); ctx.stroke();
+            }
+
+            // Render Entities
+            if (isGameRunning) {
+                enemies.forEach(e => { if (!e.dead) e.draw(); });
+                if (activeBoss && !activeBoss.dead) activeBoss.draw();
+                projectiles.forEach(p => p.draw());
+                player.draw();
+
+                // Draw Particles
+                particles.forEach(pt => {
+                    ctx.beginPath();
+                    ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+                    ctx.fillStyle = pt.color;
+                    ctx.fill();
+                });
+
+                // Draw Floating Texts
+                floatingTexts.forEach(ft => {
+                    ctx.save();
+                    ctx.globalAlpha = ft.alpha;
+                    ctx.font = ft.isBig ? '900 18px system-ui' : '700 13px system-ui';
+                    ctx.fillStyle = ft.color;
+                    ctx.textAlign = 'center';
+                    ctx.fillText(ft.text, ft.x, ft.y);
+                    ctx.restore();
+                });
+            }
+
+            ctx.restore();
+        }
+
+        function renderMinimap() {
+            if (!minimapCtx || !isGameRunning) return;
+            minimapCtx.clearRect(0, 0, 100, 100);
+
+            // Radar Background
+            minimapCtx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+            minimapCtx.fillRect(0, 0, 100, 100);
+
+            const scale = 0.12;
+            const cx = 50;
+            const cy = 50;
+
+            // Player Dot
+            minimapCtx.beginPath();
+            minimapCtx.arc(cx, cy, 3, 0, Math.PI * 2);
+            minimapCtx.fillStyle = '#38bdf8';
+            minimapCtx.fill();
+
+            // Enemy Dots
+            enemies.forEach(e => {
+                if (!e.dead) {
+                    const mx = cx + (e.x - player.x) * scale;
+                    const my = cy + (e.y - player.y) * scale;
+                    if (mx >= 0 && mx <= 100 && my >= 0 && my <= 100) {
+                        minimapCtx.beginPath();
+                        minimapCtx.arc(mx, my, e.isElite ? 3.5 : 2, 0, Math.PI * 2);
+                        minimapCtx.fillStyle = e.isElite ? '#f59e0b' : '#ef4444';
+                        minimapCtx.fill();
+                    }
+                }
+            });
+
+            // Boss Dot
+            if (activeBoss && !activeBoss.dead) {
+                const bx = cx + (activeBoss.x - player.x) * scale;
+                const by = cy + (activeBoss.y - player.y) * scale;
+                minimapCtx.beginPath();
+                minimapCtx.arc(Math.max(5, Math.min(95, bx)), Math.max(5, Math.min(95, by)), 5, 0, Math.PI * 2);
+                minimapCtx.fillStyle = '#a855f7';
+                minimapCtx.fill();
+            }
+        }
+
+        // === UI & MODALS LOGIC ===
+        function updateHUD() {
+            if (!player) return;
+
+            const hpBar = document.getElementById('hp-bar');
+            const hpText = document.getElementById('hp-text');
+            const xpBar = document.getElementById('xp-bar');
+            const levelBadge = document.getElementById('level-badge');
+            const coinCounter = document.getElementById('coin-counter');
+            const areaTitle = document.getElementById('area-title');
+            const roomTitle = document.getElementById('room-title');
+
+            if (hpBar) hpBar.style.width = `${Math.max(0, (player.hp / player.maxHp) * 100)}%`;
+            if (hpText) hpText.innerText = `${Math.ceil(player.hp)} / ${player.maxHp}`;
+            if (xpBar) xpBar.style.width = `${Math.min(100, (player.xp / player.xpToNextLevel) * 100)}%`;
+            if (levelBadge) levelBadge.innerText = `LV. ${player.level}`;
+            if (coinCounter) coinCounter.innerText = `${saveData.coins}`;
+
+            const cfg = AREA_CONFIGS[currentArea];
+            if (areaTitle) areaTitle.innerText = `AREA ${currentArea}: ${cfg.name}`;
+            if (roomTitle) roomTitle.innerText = `ROOM ${currentRoom} / 5`;
+        }
+
+        function updateBossHUD() {
+            if (!activeBoss) return;
+            const bar = document.getElementById('boss-hp-bar');
+            const name = document.getElementById('boss-name');
+            if (bar) bar.style.width = `${Math.max(0, (activeBoss.hp / activeBoss.maxHp) * 100)}%`;
+            if (name) name.innerText = activeBoss.name;
+        }
+
+        function hideAllModals() {
+            document.querySelectorAll('#modal-menu, #modal-area, #modal-shop, #modal-upgrade, #modal-room-clear, #modal-gameover, #modal-victory').forEach(m => {
+                m.classList.add('hidden');
+            });
+        }
+
+        function triggerLevelUpModal() {
+            isPaused = true;
+            const container = document.getElementById('upgrade-cards');
+            if (!container) return;
+            container.innerHTML = '';
+
+            // Pick 3 random upgrades
+            const available = UPGRADES_LIST.filter(u => (player.upgrades[u.id] || 0) < 3);
+            const shuffled = [...available].sort(() => 0.5 - Math.random()).slice(0, 3);
+
+            shuffled.forEach(upg => {
+                const currLvl = player.upgrades[upg.id] || 0;
+                const card = document.createElement('div');
+                card.className = `glass-panel p-5 rounded-2xl border-2 hover:scale-105 cursor-pointer text-left btn-action flex flex-col justify-between rarity-${upg.rarity.toLowerCase()}`;
+                
+                card.innerHTML = `<div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-sky-300 uppercase">${upg.rarity}</span>
+                        <span class="text-xs font-mono font-bold text-amber-400">LV. ${currLvl} ➔ ${currLvl + 1}</span>
+                    </div>
+                    <h4 class="font-black text-white text-base mb-1">${upg.name}</h4>
+                    <p class="text-xs text-slate-300 leading-relaxed">${upg.desc}</p>
+                </div>`;
+
+                card.onclick = () => {
+                    player.upgrades[upg.id] = currLvl + 1;
+                    document.getElementById('modal-upgrade').classList.add('hidden');
+                    isPaused = false;
+                    audio.playClick();
+                };
+
+                container.appendChild(card);
+            });
+
+            document.getElementById('modal-upgrade').classList.remove('hidden');
+        }
+
+        function triggerGameOver() {
+            isGameRunning = false;
+            saveGameData();
+            document.getElementById('go-area').innerText = currentArea;
+            document.getElementById('go-room').innerText = currentRoom;
+            document.getElementById('go-coins').innerText = saveData.coins;
+            document.getElementById('modal-gameover').classList.remove('hidden');
+        }
+
+        function openAreaSelect() {
+            const list = document.getElementById('area-list');
+            if (!list) return;
+            list.innerHTML = '';
+
+            for (let a = 1; a <= 6; a++) {
+                const cfg = AREA_CONFIGS[a];
+                const isUnlocked = a <= saveData.unlockedArea;
+                const card = document.createElement('div');
+
+                card.className = `glass-panel p-4 rounded-2xl border-2 ${
+                    isUnlocked
+                        ? 'border-sky-400/40 hover:border-sky-400 cursor-pointer btn-action'
+                        : 'border-slate-700 opacity-60 cursor-not-allowed'
+                } flex justify-between items-center`;
+
+                card.innerHTML = `<div>
+                    <div class="text-xs font-bold text-sky-400">AREA ${a}</div>
+                    <div class="text-sm font-black text-white">${cfg.name}</div>
+                </div>
+                <div>${isUnlocked ? '🔓' : '🔒'}</div>`;
+
+                if (isUnlocked) {
+                    card.onclick = () => {
+                        startNewRun(a);
+                        document.getElementById('modal-area').classList.add('hidden');
+                    };
+                }
+                list.appendChild(card);
+            }
+            document.getElementById('modal-area').classList.remove('hidden');
+        }
+
+        function openShop() {
+            const list = document.getElementById('shop-items');
+            if (!list) return;
+            list.innerHTML = '';
+
+            document.getElementById('shop-coin-count').innerText = saveData.coins;
+
+            const shopDefs = [
+                { id: 'hp', name: 'Base HP', desc: '+15 HP Maksimal', cost: 50 },
+                { id: 'dmg', name: 'Base Damage', desc: '+5 Damage Ikan', cost: 60 },
+                { id: 'speed', name: 'Move Speed', desc: '+0.3 Kecepatan Jalan', cost: 40 },
+                { id: 'atkSpd', name: 'Attack Speed', desc: '+8% Kecepatan Lempar', cost: 75 },
+                { id: 'crit', name: 'Critical Chance', desc: '+3% Peluang Crit', cost: 80 }
+            ];
+
+            shopDefs.forEach(item => {
+                const lvl = saveData.upgrades[item.id] || 0;
+                const cost = item.cost + lvl * 40;
+                const card = document.createElement('div');
+
+                card.className = `glass-panel p-3.5 rounded-2xl flex justify-between items-center border-slate-700`;
+                card.innerHTML = `<div>
+                    <div class="text-sm font-bold text-white">${item.name} <span class="text-amber-400 text-xs">(LV. ${lvl})</span></div>
+                    <div class="text-[11px] text-slate-300">${item.desc}</div>
+                </div>
+                <button class="px-3 py-1.5 glass-panel bg-amber-500/20 text-amber-300 font-bold text-xs rounded-xl btn-action border-amber-400/40">
+                    🐟 ${cost}
+                </button>`;
+
+                const btn = card.querySelector('button');
+                btn.onclick = () => {
+                    if (saveData.coins >= cost) {
+                        saveData.coins -= cost;
+                        saveData.upgrades[item.id] = lvl + 1;
+                        saveGameData();
+                        audio.playClick();
+                        openShop();
+                    }
+                };
+
+                list.appendChild(card);
+            });
+
+            document.getElementById('modal-shop').classList.remove('hidden');
+        }
+
+        function setupControls() {
+            window.addEventListener('keydown', e => keys[e.code] = true);
+            window.addEventListener('keyup', e => keys[e.code] = false);
+
+            // Touch Joystick
+            const zone = document.getElementById('joystick-zone');
+            const knob = document.getElementById('joystick-knob');
+
+            if (zone && knob) {
+                const handleTouchMove = (e) => {
+                    e.preventDefault();
+                    if (!joystickActive) return;
+                    const touch = e.touches[0];
+                    const rect = zone.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+
+                    let dx = touch.clientX - centerX;
+                    let dy = touch.clientY - centerY;
+                    const maxDist = rect.width / 2;
+                    const dist = Math.hypot(dx, dy);
+
+                    if (dist > maxDist) {
+                        dx = (dx / dist) * maxDist;
+                        dy = (dy / dist) * maxDist;
+                    }
+
+                    knob.style.transform = `translate(${dx}px, ${dy}px)`;
+                    joystickVector.x = dx / maxDist;
+                    joystickVector.y = dy / maxDist;
+                };
+
+                zone.addEventListener('touchstart', e => {
+                    joystickActive = true;
+                    handleTouchMove(e);
+                }, { passive: false });
+
+                zone.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+                const resetJoystick = () => {
+                    joystickActive = false;
+                    joystickVector = { x: 0, y: 0 };
+                    knob.style.transform = 'translate(0px, 0px)';
+                };
+
+                zone.addEventListener('touchend', resetJoystick);
+                zone.addEventListener('touchcancel', resetJoystick);
+            }
+        }
+
+        function setupUIEvents() {
+            document.getElementById('btn-main-play').onclick = () => {
+                audio.init();
+                audio.playClick();
+                startNewRun(1);
+            };
+
+            document.getElementById('btn-area-select').onclick = () => {
+                audio.init();
+                audio.playClick();
+                openAreaSelect();
+            };
+
+            document.getElementById('btn-close-area').onclick = () => {
+                document.getElementById('modal-area').classList.add('hidden');
+            };
+
+            document.getElementById('btn-shop').onclick = () => {
+                audio.init();
+                audio.playClick();
+                openShop();
+            };
+
+            document.getElementById('btn-close-shop').onclick = () => {
+                document.getElementById('modal-shop').classList.add('hidden');
+            };
+
+            document.getElementById('btn-next-room').onclick = () => {
+                document.getElementById('modal-room-clear').classList.add('hidden');
+                isPaused = false;
+
+                if (currentRoom < 5) {
+                    currentRoom++;
+                    spawnRoomEnemies();
+                    updateHUD();
+                } else {
+                    // Unlock next area
+                    if (currentArea < 6) {
+                        currentArea++;
+                        currentRoom = 1;
+                        if (currentArea > saveData.unlockedArea) {
+                            saveData.unlockedArea = currentArea;
+                            saveGameData();
+                        }
+                        spawnRoomEnemies();
+                        updateHUD();
+                    } else {
+                        // Game Clear Victory
+                        document.getElementById('modal-victory').classList.remove('hidden');
+                    }
+                }
+            };
+
+            document.getElementById('btn-retry').onclick = () => {
+                startNewRun(currentArea);
+            };
+
+            document.getElementById('btn-victory-main').onclick = () => {
+                hideAllModals();
+                document.getElementById('modal-menu').classList.remove('hidden');
+            };
+
+            document.getElementById('btn-sound-toggle').onclick = () => {
+                audio.muted = !audio.muted;
+                document.getElementById('btn-sound-toggle').innerText = audio.muted ? '🔇' : '🔊';
+            };
+        }
+
+        // Auto Start Engine
+        window.addEventListener('DOMContentLoaded', () => {
+            initGame();
+        });
+    </script>
 </body>
 </html>
