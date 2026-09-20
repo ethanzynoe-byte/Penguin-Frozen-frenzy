@@ -27,7 +27,7 @@ width: 100%;
 height: 100%;
 }
 .glass-panel {
-background: rgba(15, 23, 42, 0.88);
+background: rgba(15, 23, 42, 0.92);
 backdrop-filter: blur(12px);
 -webkit-backdrop-filter: blur(12px);
 border: 1px solid rgba(56, 189, 248, 0.35);
@@ -38,11 +38,12 @@ box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
 .rarity-epic { border-color: #a855f7; }
 .rarity-legendary { border-color: #f59e0b; }
 ​.btn-action {
-transition: transform 0.15s ease, background-color 0.15s ease;
+transition: transform 0.12s ease, background-color 0.12s ease;
 cursor: pointer;
+pointer-events: auto;
 }
 .btn-action:active {
-transform: scale(0.95);
+transform: scale(0.94);
 }
 </style>
 </head>
@@ -91,12 +92,12 @@ transform: scale(0.95);
 <span>🐟</span>
 <span id="coin-counter" class="font-mono">0</span>
 </div>
-<button id="btn-sound-toggle" class="glass-panel p-2 rounded-2xl text-base btn-action hover:bg-slate-800/80">🔊</button>
-<button id="btn-pause" class="glass-panel p-2 rounded-2xl text-base btn-action hover:bg-slate-800/80">⏸️</button>
+<button id="btn-sound-toggle" type="button" class="glass-panel p-2.5 rounded-2xl text-base btn-action hover:bg-slate-800/80">🔊</button>
+<button id="btn-pause" type="button" class="glass-panel p-2.5 rounded-2xl text-base btn-action hover:bg-slate-800/80">⏸️</button>
 </div>
 </div>
 ​<!-- BOSS HP BAR OVERLAY -->
-<div id="boss-hp-container" class="hidden absolute top-16 left-1/2 -translate-x-1/2 w-11/12 max-w-md glass-panel p-3 rounded-2xl text-center pointer-events-auto border-red-500/40">
+<div id="boss-hp-container" class="hidden absolute top-16 left-1/2 -translate-x-1/2 w-11/12 max-w-md glass-panel p-3 rounded-2xl text-center pointer-events-auto border-red-500/40 z-20">
 <div class="flex justify-between text-xs font-bold mb-1">
 <span id="boss-name" class="text-red-400 uppercase tracking-wider">FROSTFANG</span>
 <span id="boss-enraged-tag" class="hidden text-amber-400 animate-pulse font-extrabold">ENRAGED!</span>
@@ -106,21 +107,21 @@ transform: scale(0.95);
 </div>
 </div>
 ​<!-- MOBILE JOYSTICK AREA -->
-<div id="joystick-zone" class="hidden absolute left-6 bottom-6 w-32 h-32 pointer-events-auto md:hidden rounded-full border-2 border-sky-400/20 bg-sky-500/5 flex items-center justify-center">
-<div id="joystick-knob" class="w-12 h-12 bg-sky-400/50 rounded-full border border-white/50 transition-transform duration-75"></div>
+<div id="joystick-zone" class="hidden absolute left-6 bottom-6 w-32 h-32 pointer-events-auto md:hidden rounded-full border-2 border-sky-400/20 bg-sky-500/5 flex items-center justify-center" style="touch-action: none;">
+<div id="joystick-knob" class="w-12 h-12 bg-sky-400/50 rounded-full border border-white/50 transition-transform duration-75 pointer-events-none"></div>
 </div>
 </div>
 ​<!-- MODAL CONTAINERS -->
 ​<!-- MAIN MENU -->
-<div id="modal-menu" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50">
+<div id="modal-menu" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50 pointer-events-auto">
 <div class="text-center max-w-sm w-full">
 <div class="text-6xl mb-2 animate-bounce">🐧</div>
 <h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-blue-200 to-indigo-400 tracking-wider mb-1">PENGUIN</h1>
 <h2 class="text-xl font-bold text-sky-200 tracking-widest mb-6 uppercase">FROZEN FRENZY</h2>
 ​<div class="flex flex-col gap-3 w-full mb-6">
-<button id="btn-main-play" class="w-full py-4 glass-panel bg-gradient-to-r from-sky-500 to-blue-600 text-white font-bold text-lg rounded-2xl btn-action border-sky-300/50 shadow-lg shadow-sky-500/20">MAIN SEKARANG 🚀</button>
-<button id="btn-area-select" class="w-full py-3.5 glass-panel text-sky-200 font-bold rounded-2xl btn-action hover:bg-slate-800">PILIH AREA 🗺️</button>
-<button id="btn-shop" class="w-full py-3.5 glass-panel text-amber-300 font-bold rounded-2xl btn-action hover:bg-slate-800 flex items-center justify-center gap-2">
+<button id="btn-main-play" type="button" class="w-full py-4 glass-panel bg-gradient-to-r from-sky-500 to-blue-600 text-white font-bold text-lg rounded-2xl btn-action border-sky-300/50 shadow-lg shadow-sky-500/20">MAIN SEKARANG 🚀</button>
+<button id="btn-area-select" type="button" class="w-full py-3.5 glass-panel text-sky-200 font-bold rounded-2xl btn-action hover:bg-slate-800">PILIH AREA 🗺️</button>
+<button id="btn-shop" type="button" class="w-full py-3.5 glass-panel text-amber-300 font-bold rounded-2xl btn-action hover:bg-slate-800 flex items-center justify-center gap-2">
 <span>🛒 PERMANENT SHOP</span>
 </button>
 </div>
@@ -128,27 +129,27 @@ transform: scale(0.95);
 </div>
 </div>
 ​<!-- PAUSE MENU MODAL -->
-<div id="modal-pause" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50">
+<div id="modal-pause" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50 pointer-events-auto">
 <div class="glass-panel p-6 rounded-3xl max-w-xs w-full text-center border-sky-400/40">
 <div class="text-4xl mb-2">⏸️</div>
 <h3 class="text-2xl font-black text-sky-300 mb-6">GAME DIJEDA</h3>
 ​<div class="flex flex-col gap-3 w-full">
-<button id="btn-resume" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold rounded-2xl btn-action">▶️ LANJUTKAN</button>
-<button id="btn-pause-restart" class="w-full py-3.5 glass-panel text-sky-200 font-bold rounded-2xl btn-action hover:bg-slate-800">🔄 ULANGI RUN</button>
-<button id="btn-pause-main" class="w-full py-3.5 glass-panel text-red-400 font-bold rounded-2xl btn-action hover:bg-slate-800">🏠 MENU UTAMA</button>
+<button id="btn-resume" type="button" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold rounded-2xl btn-action">▶️ LANJUTKAN</button>
+<button id="btn-pause-restart" type="button" class="w-full py-3.5 glass-panel text-sky-200 font-bold rounded-2xl btn-action hover:bg-slate-800">🔄 ULANGI RUN</button>
+<button id="btn-pause-main" type="button" class="w-full py-3.5 glass-panel text-red-400 font-bold rounded-2xl btn-action hover:bg-slate-800">🏠 MENU UTAMA</button>
 </div>
 </div>
 </div>
 ​<!-- AREA SELECT MODAL -->
-<div id="modal-area" class="hidden absolute inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50">
+<div id="modal-area" class="hidden absolute inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50 pointer-events-auto">
 <div class="max-w-md w-full glass-panel p-6 rounded-3xl border-sky-400/30">
 <h3 class="text-xl font-black text-sky-300 text-center mb-4">PILIH AREA PETUALANGAN</h3>
 <div id="area-list" class="flex flex-col gap-3 max-h-[60vh] overflow-y-auto pr-1"></div>
-<button id="btn-close-area" class="w-full mt-5 py-3 glass-panel text-slate-300 font-bold rounded-2xl btn-action">KEMBALI</button>
+<button id="btn-close-area" type="button" class="w-full mt-5 py-3 glass-panel text-slate-300 font-bold rounded-2xl btn-action">KEMBALI</button>
 </div>
 </div>
 ​<!-- PERMANENT SHOP MODAL -->
-<div id="modal-shop" class="hidden absolute inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50">
+<div id="modal-shop" class="hidden absolute inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50 pointer-events-auto">
 <div class="max-w-md w-full glass-panel p-6 rounded-3xl border-amber-400/30">
 <div class="flex justify-between items-center mb-4">
 <h3 class="text-xl font-black text-amber-400">UPGRADE MR. KARO</h3>
@@ -157,11 +158,11 @@ transform: scale(0.95);
 </div>
 </div>
 <div id="shop-items" class="flex flex-col gap-3 max-h-[55vh] overflow-y-auto pr-1"></div>
-<button id="btn-close-shop" class="w-full mt-5 py-3 glass-panel text-slate-300 font-bold rounded-2xl btn-action">KEMBALI</button>
+<button id="btn-close-shop" type="button" class="w-full mt-5 py-3 glass-panel text-slate-300 font-bold rounded-2xl btn-action">KEMBALI</button>
 </div>
 </div>
 ​<!-- LEVEL UP / IN-RUN UPGRADE MODAL -->
-<div id="modal-upgrade" class="hidden absolute inset-0 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50">
+<div id="modal-upgrade" class="hidden absolute inset-0 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50 pointer-events-auto">
 <div class="text-center max-w-lg w-full">
 <div class="text-amber-400 font-black tracking-widest text-sm uppercase mb-1">PILIH 1 KEMAMPUAN</div>
 <h2 class="text-3xl font-black text-white mb-6">LEVEL UP!</h2>
@@ -169,7 +170,7 @@ transform: scale(0.95);
 </div>
 </div>
 ​<!-- ROOM CLEAR / REWARD MODAL -->
-<div id="modal-room-clear" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 z-40">
+<div id="modal-room-clear" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 z-40 pointer-events-auto">
 <div class="glass-panel p-6 rounded-3xl max-w-xs w-full text-center border-emerald-400/40">
 <div class="text-4xl mb-2">🧊</div>
 <h3 class="text-2xl font-black text-emerald-400 mb-1">ROOM BERSIH!</h3>
@@ -179,11 +180,11 @@ transform: scale(0.95);
 <div class="glass-panel py-2 rounded-xl text-amber-300" id="rc-coins">🐟 +0</div>
 <div class="glass-panel py-2 rounded-xl text-sky-300" id="rc-xp">+0 XP</div>
 </div>
-<button id="btn-next-room" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold rounded-2xl btn-action shadow-lg shadow-emerald-500/20">LANJUT ROOM</button>
+<button id="btn-next-room" type="button" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold rounded-2xl btn-action shadow-lg shadow-emerald-500/20">LANJUT ROOM</button>
 </div>
 </div>
 ​<!-- GAME OVER MODAL -->
-<div id="modal-gameover" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50">
+<div id="modal-gameover" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50 pointer-events-auto">
 <div class="glass-panel p-6 rounded-3xl max-w-xs w-full text-center border-red-500/40">
 <div class="text-5xl mb-2">💔</div>
 <h3 class="text-2xl font-black text-red-500 mb-1">GAME OVER</h3>
@@ -194,18 +195,18 @@ transform: scale(0.95);
 <div class="flex justify-between"><span>Koin Ditemukan:</span> <span id="go-coins" class="text-amber-300">0</span></div>
 </div>
 <div class="flex flex-col gap-2">
-<button id="btn-retry" class="w-full py-3.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white font-bold rounded-2xl btn-action">COBA LAGI 🔄</button>
-<button id="btn-gameover-main" class="w-full py-3 glass-panel text-slate-300 font-bold rounded-2xl btn-action">MENU UTAMA 🏠</button>
+<button id="btn-retry" type="button" class="w-full py-3.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white font-bold rounded-2xl btn-action">COBA LAGI 🔄</button>
+<button id="btn-gameover-main" type="button" class="w-full py-3 glass-panel text-slate-300 font-bold rounded-2xl btn-action hover:bg-slate-800">MENU UTAMA 🏠</button>
 </div>
 </div>
 </div>
 ​<!-- VICTORY MODAL -->
-<div id="modal-victory" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50">
+<div id="modal-victory" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50 pointer-events-auto">
 <div class="glass-panel p-6 rounded-3xl max-w-xs w-full text-center border-amber-400/50">
 <div class="text-5xl mb-2 animate-bounce">👑</div>
 <h3 class="text-2xl font-black text-amber-400 mb-1">KEMENANGAN MUTLAK!</h3>
 <p class="text-xs text-slate-300 mb-4">Mr. Karo berhasil menguasai seluruh Kutub!</p>
-<button id="btn-victory-main" class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black rounded-2xl btn-action">MENU UTAMA 🏠</button>
+<button id="btn-victory-main" type="button" class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black rounded-2xl btn-action">MENU UTAMA 🏠</button>
 </div>
 </div>
 ​<!-- GAME LOGIC SCRIPT -->
@@ -254,7 +255,7 @@ playBossWarning() { this.playTone(120, 0.4, 'sawtooth', 0.2); }
 playClick() { this.playTone(500, 0.04, 'sine', 0.05); }
 }
 ​const audio = new SoundEngine();
-​// === SAVE SYSTEM (LOCALSTORAGE SAFE) ===
+​// === SAVE SYSTEM (LOCALSTORAGE SAFE WITH STRICT FALLBACKS) ===
 const SAVE_KEY = 'PENGUIN_FROZEN_FRENZY_DATA';
 let saveData = {
 coins: 0,
@@ -266,7 +267,19 @@ try {
 const raw = localStorage.getItem(SAVE_KEY);
 if (raw) {
 const parsed = JSON.parse(raw);
-saveData = { ...saveData, ...parsed, upgrades: { ...saveData.upgrades, ...(parsed.upgrades || {}) } };
+saveData = {
+coins: Number(parsed.coins) || 0,
+unlockedArea: Number(parsed.unlockedArea) || 1,
+upgrades: {
+hp: Number(parsed.upgrades?.hp) || 0,
+dmg: Number(parsed.upgrades?.dmg) || 0,
+speed: Number(parsed.upgrades?.speed) || 0,
+atkSpd: Number(parsed.upgrades?.atkSpd) || 0,
+crit: Number(parsed.upgrades?.crit) || 0,
+xpGain: Number(parsed.upgrades?.xpGain) || 0,
+coinGain: Number(parsed.upgrades?.coinGain) || 0
+}
+};
 }
 } catch (e) {
 console.warn("Storage restricted", e);
@@ -350,11 +363,11 @@ this.radius = 18;
 this.level = 1;
 this.xp = 0;
 this.xpToNextLevel = 50;
-​const pHp = saveData.upgrades.hp * 15;
-const pDmg = saveData.upgrades.dmg * 5;
-const pSpd = saveData.upgrades.speed * 0.3;
-const pAtkSpd = saveData.upgrades.atkSpd * 0.08;
-const pCrit = saveData.upgrades.crit * 0.03;
+​const pHp = (saveData.upgrades?.hp || 0) * 15;
+const pDmg = (saveData.upgrades?.dmg || 0) * 5;
+const pSpd = (saveData.upgrades?.speed || 0) * 0.3;
+const pAtkSpd = (saveData.upgrades?.atkSpd || 0) * 0.08;
+const pCrit = (saveData.upgrades?.crit || 0) * 0.03;
 ​this.maxHp = 100 + pHp;
 this.hp = this.maxHp;
 this.speed = 3.4 + pSpd;
@@ -480,7 +493,7 @@ triggerGameOver();
 }
 }
 ​addXP(amount) {
-const gainBonus = 1 + (saveData.upgrades.xpGain * 0.1);
+const gainBonus = 1 + ((saveData.upgrades?.xpGain || 0) * 0.1);
 const actualXP = amount * gainBonus;
 this.xp += actualXP;
 spawnFloatingText(this.x, this.y - 20, +${Math.round(actualXP)} XP, '#f59e0b');
@@ -510,7 +523,7 @@ ctx.stroke();
 ctx.fillStyle = 'rgba(56, 189, 248, 0.15)';
 ctx.fill();
 }
-​ctx.scale(this.squashX, this.squashY);
+​ctx.scale(this.squashX || 1, this.squashY || 1);
 ​ctx.beginPath();
 ctx.ellipse(0, 0, 16, 18, 0, 0, Math.PI * 2);
 ctx.fillStyle = '#0f172a';
@@ -596,7 +609,7 @@ ctx.fill();
 }
 ​class Enemy {
 constructor(typeKey, isElite = false) {
-const config = ENEMY_STATS[typeKey];
+const config = ENEMY_STATS[typeKey] || ENEMY_STATS['FOX'];
 this.typeKey = typeKey;
 this.name = config.name;
 this.isElite = isElite;
@@ -638,7 +651,7 @@ spawnParticles(this.x, this.y, '#bae6fd', 6);
 this.dead = true;
 audio.playKill();
 if (player) player.addXP(this.xp);
-​const coinBonus = 1 + (saveData.upgrades.coinGain * 0.15);
+​const coinBonus = 1 + ((saveData.upgrades?.coinGain || 0) * 0.15);
 const baseCoins = this.isElite ? Math.floor(Math.random() * 5) + 5 : Math.floor(Math.random() * 3) + 1;
 const finalCoins = Math.round(baseCoins * coinBonus);
 saveData.coins += finalCoins;
@@ -694,7 +707,7 @@ ctx.beginPath(); ctx.arc(this.size * 0.3, -this.size * 0.2, 3, 0, Math.PI * 2); 
 }
 ​class BossEnemy {
 constructor(bossKey) {
-const config = BOSS_STATS[bossKey];
+const config = BOSS_STATS[bossKey] || BOSS_STATS['FROSTFANG'];
 this.key = bossKey;
 this.name = config.name;
 this.maxHp = config.hp * (1 + (currentArea - 1) * 0.5);
@@ -801,7 +814,7 @@ document.getElementById('boss-hp-container').classList.add('hidden');
 ​function spawnRoomEnemies() {
 enemies = [];
 activeBoss = null;
-const areaCfg = AREA_CONFIGS[currentArea];
+const areaCfg = AREA_CONFIGS[currentArea] || AREA_CONFIGS[1];
 ​const bossContainer = document.getElementById('boss-hp-container');
 if (bossContainer) bossContainer.classList.add('hidden');
 ​if (currentRoom === 5) {
