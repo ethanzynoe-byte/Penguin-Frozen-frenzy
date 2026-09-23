@@ -1,1279 +1,1854 @@
+```html
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PENGUIN: FROZEN FRENZY</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-* {
-user-select: none;
--webkit-user-select: none;
-touch-action: manipulation;
-box-sizing: border-box;
-}
-body, html {
-margin: 0;
-padding: 0;
-width: 100%;
-height: 100%;
-overflow: hidden;
-background-color: #0f172a;
-font-family: system-ui, -apple-system, sans-serif;
-}
-canvas {
-display: block;
-width: 100%;
-height: 100%;
-}
-.glass-panel {
-background: rgba(15, 23, 42, 0.92);
-backdrop-filter: blur(12px);
--webkit-backdrop-filter: blur(12px);
-border: 1px solid rgba(56, 189, 248, 0.35);
-box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
-}
-.rarity-common { border-color: #94a3b8; }
-.rarity-rare { border-color: #38bdf8; }
-.rarity-epic { border-color: #a855f7; }
-.rarity-legendary { border-color: #f59e0b; }
-​.btn-action {
-transition: transform 0.12s ease, background-color 0.12s ease;
-cursor: pointer;
-pointer-events: auto;
-}
-.btn-action:active {
-transform: scale(0.94);
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PENGUIN: FROZEN FRENZY</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            box-sizing: border-box;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #0b1329;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+        }
+        .rarity-common { border-color: #94a3b8; background: rgba(30, 41, 59, 0.85); }
+        .rarity-rare { border-color: #38bdf8; background: rgba(14, 116, 144, 0.25); }
+        .rarity-epic { border-color: #a855f7; background: rgba(126, 34, 206, 0.25); }
+        .rarity-legendary { border-color: #f59e0b; background: rgba(180, 83, 9, 0.25); }
+        
+        .btn-action {
+            transition: transform 0.12s ease, background-color 0.12s ease, box-shadow 0.12s ease;
+            cursor: pointer !important;
+            pointer-events: auto !important;
+        }
+        .btn-action:active {
+            transform: scale(0.94);
+        }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+        ::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.5); border-radius: 4px; }
+    </style>
 </head>
 <body class="relative flex items-center justify-center">
-​<!-- GAME CANVAS -->
-<canvas id="gameCanvas"></canvas>
-​<!-- UI OVERLAY LAYER -->
-<div id="ui-layer" class="absolute inset-0 pointer-events-none flex flex-col justify-between p-3 md:p-6 z-10">
-​<!-- HUD TOP (ONLY SHOWN IN GAMEPLAY) -->
-<div id="hud-top" class="hidden flex justify-between items-start w-full">
-<!-- PLAYER INFO & MINI-MAP -->
-<div class="flex flex-col gap-2">
-<div class="glass-panel p-2.5 rounded-2xl flex items-center gap-3 pointer-events-auto min-w-[190px]">
-<div class="text-3xl">🐧</div>
-<div class="flex-1">
-<div class="flex justify-between text-xs font-bold text-sky-200 mb-1">
-<span>MR. KARO</span>
-<span id="level-badge" class="text-amber-400">LV. 1</span>
-</div>
-<!-- HP BAR -->
-<div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden border border-sky-900/50 mb-1">
-<div id="hp-bar" class="bg-gradient-to-r from-emerald-500 to-green-400 h-full w-full transition-all duration-200"></div>
-</div>
-<div class="flex justify-between text-[10px] text-slate-300 font-mono">
-<span id="hp-text">100 / 100</span>
-</div>
-<!-- XP BAR -->
-<div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
-<div id="xp-bar" class="bg-gradient-to-r from-amber-500 to-yellow-300 h-full w-0 transition-all duration-200"></div>
-</div>
-</div>
-</div>
-​<!-- MINI-MAP CANVAS -->
-<div class="glass-panel p-1 rounded-2xl pointer-events-auto w-[90px] h-[90px] relative overflow-hidden flex items-center justify-center border border-sky-500/30">
-<canvas id="minimapCanvas" width="90" height="90" class="rounded-xl"></canvas>
-</div>
-</div>
-​<!-- AREA / ROOM DISPLAY -->
-<div id="room-info-card" class="glass-panel px-4 py-2 rounded-2xl text-center pointer-events-auto">
-<div id="area-title" class="text-[10px] sm:text-xs font-bold tracking-wider text-sky-400 uppercase">AREA 1: SNOWY SHORE</div>
-<div id="room-title" class="text-base sm:text-lg font-black text-white">ROOM 1 / 5</div>
-</div>
-​<!-- CURRENCY & PAUSE / AUDIO BUTTONS -->
-<div class="flex items-center gap-1.5 pointer-events-auto">
-<div class="glass-panel px-3 py-1.5 rounded-2xl flex items-center gap-1.5 font-bold text-amber-300 text-sm">
-<span>🐟</span>
-<span id="coin-counter" class="font-mono">0</span>
-</div>
-<button id="btn-sound-toggle" type="button" class="glass-panel p-2.5 rounded-2xl text-base btn-action hover:bg-slate-800/80">🔊</button>
-<button id="btn-pause" type="button" class="glass-panel p-2.5 rounded-2xl text-base btn-action hover:bg-slate-800/80">⏸️</button>
-</div>
-</div>
-​<!-- BOSS HP BAR OVERLAY -->
-<div id="boss-hp-container" class="hidden absolute top-16 left-1/2 -translate-x-1/2 w-11/12 max-w-md glass-panel p-3 rounded-2xl text-center pointer-events-auto border-red-500/40 z-20">
-<div class="flex justify-between text-xs font-bold mb-1">
-<span id="boss-name" class="text-red-400 uppercase tracking-wider">FROSTFANG</span>
-<span id="boss-enraged-tag" class="hidden text-amber-400 animate-pulse font-extrabold">ENRAGED!</span>
-</div>
-<div class="w-full bg-slate-900 h-3.5 rounded-full overflow-hidden border border-red-900">
-<div id="boss-hp-bar" class="bg-gradient-to-r from-red-600 to-amber-500 h-full w-full transition-all duration-150"></div>
-</div>
-</div>
-​<!-- MOBILE JOYSTICK AREA -->
-<div id="joystick-zone" class="hidden absolute left-6 bottom-6 w-32 h-32 pointer-events-auto md:hidden rounded-full border-2 border-sky-400/20 bg-sky-500/5 flex items-center justify-center" style="touch-action: none;">
-<div id="joystick-knob" class="w-12 h-12 bg-sky-400/50 rounded-full border border-white/50 transition-transform duration-75 pointer-events-none"></div>
-</div>
-</div>
-​<!-- MODAL CONTAINERS -->
-​<!-- MAIN MENU -->
-<div id="modal-menu" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50 pointer-events-auto">
-<div class="text-center max-w-sm w-full">
-<div class="text-6xl mb-2 animate-bounce">🐧</div>
-<h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-blue-200 to-indigo-400 tracking-wider mb-1">PENGUIN</h1>
-<h2 class="text-xl font-bold text-sky-200 tracking-widest mb-6 uppercase">FROZEN FRENZY</h2>
-​<div class="flex flex-col gap-3 w-full mb-6">
-<button id="btn-main-play" type="button" class="w-full py-4 glass-panel bg-gradient-to-r from-sky-500 to-blue-600 text-white font-bold text-lg rounded-2xl btn-action border-sky-300/50 shadow-lg shadow-sky-500/20">MAIN SEKARANG 🚀</button>
-<button id="btn-area-select" type="button" class="w-full py-3.5 glass-panel text-sky-200 font-bold rounded-2xl btn-action hover:bg-slate-800">PILIH AREA 🗺️</button>
-<button id="btn-shop" type="button" class="w-full py-3.5 glass-panel text-amber-300 font-bold rounded-2xl btn-action hover:bg-slate-800 flex items-center justify-center gap-2">
-<span>🛒 PERMANENT SHOP</span>
-</button>
-</div>
-​<div class="text-xs text-slate-400 font-mono">Petualangan 2.5D Mr. Karo di Kutub Selatan</div>
-</div>
-</div>
-​<!-- PAUSE MENU MODAL -->
-<div id="modal-pause" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50 pointer-events-auto">
-<div class="glass-panel p-6 rounded-3xl max-w-xs w-full text-center border-sky-400/40">
-<div class="text-4xl mb-2">⏸️</div>
-<h3 class="text-2xl font-black text-sky-300 mb-6">GAME DIJEDA</h3>
-​<div class="flex flex-col gap-3 w-full">
-<button id="btn-resume" type="button" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold rounded-2xl btn-action">▶️ LANJUTKAN</button>
-<button id="btn-pause-restart" type="button" class="w-full py-3.5 glass-panel text-sky-200 font-bold rounded-2xl btn-action hover:bg-slate-800">🔄 ULANGI RUN</button>
-<button id="btn-pause-main" type="button" class="w-full py-3.5 glass-panel text-red-400 font-bold rounded-2xl btn-action hover:bg-slate-800">🏠 MENU UTAMA</button>
-</div>
-</div>
-</div>
-​<!-- AREA SELECT MODAL -->
-<div id="modal-area" class="hidden absolute inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50 pointer-events-auto">
-<div class="max-w-md w-full glass-panel p-6 rounded-3xl border-sky-400/30">
-<h3 class="text-xl font-black text-sky-300 text-center mb-4">PILIH AREA PETUALANGAN</h3>
-<div id="area-list" class="flex flex-col gap-3 max-h-[60vh] overflow-y-auto pr-1"></div>
-<button id="btn-close-area" type="button" class="w-full mt-5 py-3 glass-panel text-slate-300 font-bold rounded-2xl btn-action">KEMBALI</button>
-</div>
-</div>
-​<!-- PERMANENT SHOP MODAL -->
-<div id="modal-shop" class="hidden absolute inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50 pointer-events-auto">
-<div class="max-w-md w-full glass-panel p-6 rounded-3xl border-amber-400/30">
-<div class="flex justify-between items-center mb-4">
-<h3 class="text-xl font-black text-amber-400">UPGRADE MR. KARO</h3>
-<div class="glass-panel px-3 py-1 rounded-xl text-amber-300 font-bold text-sm flex items-center gap-1">
-<span>🐟</span> <span id="shop-coin-count">0</span>
-</div>
-</div>
-<div id="shop-items" class="flex flex-col gap-3 max-h-[55vh] overflow-y-auto pr-1"></div>
-<button id="btn-close-shop" type="button" class="w-full mt-5 py-3 glass-panel text-slate-300 font-bold rounded-2xl btn-action">KEMBALI</button>
-</div>
-</div>
-​<!-- LEVEL UP / IN-RUN UPGRADE MODAL -->
-<div id="modal-upgrade" class="hidden absolute inset-0 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50 pointer-events-auto">
-<div class="text-center max-w-lg w-full">
-<div class="text-amber-400 font-black tracking-widest text-sm uppercase mb-1">PILIH 1 KEMAMPUAN</div>
-<h2 class="text-3xl font-black text-white mb-6">LEVEL UP!</h2>
-<div id="upgrade-cards" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
-</div>
-</div>
-​<!-- ROOM CLEAR / REWARD MODAL -->
-<div id="modal-room-clear" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 z-40 pointer-events-auto">
-<div class="glass-panel p-6 rounded-3xl max-w-xs w-full text-center border-emerald-400/40">
-<div class="text-4xl mb-2">🧊</div>
-<h3 class="text-2xl font-black text-emerald-400 mb-1">ROOM BERSIH!</h3>
-<p class="text-xs text-slate-300 mb-4">Mendapatkan bonus pemulihan & koin</p>
-<div class="space-y-2 mb-6 font-mono text-sm">
-<div class="glass-panel py-2 rounded-xl text-emerald-300" id="rc-heal">+0 HP</div>
-<div class="glass-panel py-2 rounded-xl text-amber-300" id="rc-coins">🐟 +0</div>
-<div class="glass-panel py-2 rounded-xl text-sky-300" id="rc-xp">+0 XP</div>
-</div>
-<button id="btn-next-room" type="button" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold rounded-2xl btn-action shadow-lg shadow-emerald-500/20">LANJUT ROOM</button>
-</div>
-</div>
-​<!-- GAME OVER MODAL -->
-<div id="modal-gameover" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50 pointer-events-auto">
-<div class="glass-panel p-6 rounded-3xl max-w-xs w-full text-center border-red-500/40">
-<div class="text-5xl mb-2">💔</div>
-<h3 class="text-2xl font-black text-red-500 mb-1">GAME OVER</h3>
-<p class="text-xs text-slate-400 mb-4">Mr. Karo kehabisan tenaga...</p>
-<div class="glass-panel p-3 rounded-2xl space-y-1 mb-6 text-xs text-slate-300 font-mono text-left">
-<div class="flex justify-between"><span>Area Reached:</span> <span id="go-area" class="text-sky-300">1</span></div>
-<div class="flex justify-between"><span>Room Reached:</span> <span id="go-room" class="text-sky-300">1</span></div>
-<div class="flex justify-between"><span>Koin Ditemukan:</span> <span id="go-coins" class="text-amber-300">0</span></div>
-</div>
-<div class="flex flex-col gap-2">
-<button id="btn-retry" type="button" class="w-full py-3.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white font-bold rounded-2xl btn-action">COBA LAGI 🔄</button>
-<button id="btn-gameover-main" type="button" class="w-full py-3 glass-panel text-slate-300 font-bold rounded-2xl btn-action hover:bg-slate-800">MENU UTAMA 🏠</button>
-</div>
-</div>
-</div>
-​<!-- VICTORY MODAL -->
-<div id="modal-victory" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50 pointer-events-auto">
-<div class="glass-panel p-6 rounded-3xl max-w-xs w-full text-center border-amber-400/50">
-<div class="text-5xl mb-2 animate-bounce">👑</div>
-<h3 class="text-2xl font-black text-amber-400 mb-1">KEMENANGAN MUTLAK!</h3>
-<p class="text-xs text-slate-300 mb-4">Mr. Karo berhasil menguasai seluruh Kutub!</p>
-<button id="btn-victory-main" type="button" class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black rounded-2xl btn-action">MENU UTAMA 🏠</button>
-</div>
-</div>
-​<!-- GAME LOGIC SCRIPT -->
-<script>
-// === AUDIO ENGINE ===
-class SoundEngine {
-constructor() {
-this.ctx = null;
-this.muted = false;
-}
-init() {
-if (!this.ctx) {
-const AudioCtx = window.AudioContext || window.webkitAudioContext;
-if (AudioCtx) this.ctx = new AudioCtx();
-}
-if (this.ctx && this.ctx.state === 'suspended') {
-this.ctx.resume().catch(() => {});
-}
-}
-playTone(freq, duration, type = 'sine', vol = 0.1) {
-if (this.muted) return;
-this.init();
-if (!this.ctx) return;
-try {
-const osc = this.ctx.createOscillator();
-const gain = this.ctx.createGain();
-osc.type = type;
-osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
-osc.connect(gain);
-gain.connect(this.ctx.destination);
-osc.start();
-osc.stop(this.ctx.currentTime + duration);
-} catch (e) {}
-}
-playThrow() { this.playTone(400, 0.08, 'sine', 0.08); }
-playHit() { this.playTone(180, 0.1, 'triangle', 0.15); }
-playCrit() { this.playTone(600, 0.15, 'square', 0.12); }
-playKill() { this.playTone(220, 0.2, 'sawtooth', 0.1); }
-playLevelUp() {
-this.playTone(300, 0.1, 'sine', 0.1);
-setTimeout(() => this.playTone(500, 0.2, 'sine', 0.1), 80);
-}
-playBossWarning() { this.playTone(120, 0.4, 'sawtooth', 0.2); }
-playClick() { this.playTone(500, 0.04, 'sine', 0.05); }
-}
-​const audio = new SoundEngine();
-​// === SAVE SYSTEM (LOCALSTORAGE SAFE WITH STRICT FALLBACKS) ===
-const SAVE_KEY = 'PENGUIN_FROZEN_FRENZY_DATA';
-let saveData = {
-coins: 0,
-unlockedArea: 1,
-upgrades: { hp: 0, dmg: 0, speed: 0, atkSpd: 0, crit: 0, xpGain: 0, coinGain: 0 }
-};
-​function loadSavedData() {
-try {
-const raw = localStorage.getItem(SAVE_KEY);
-if (raw) {
-const parsed = JSON.parse(raw);
-saveData = {
-coins: Number(parsed.coins) || 0,
-unlockedArea: Number(parsed.unlockedArea) || 1,
-upgrades: {
-hp: Number(parsed.upgrades?.hp) || 0,
-dmg: Number(parsed.upgrades?.dmg) || 0,
-speed: Number(parsed.upgrades?.speed) || 0,
-atkSpd: Number(parsed.upgrades?.atkSpd) || 0,
-crit: Number(parsed.upgrades?.crit) || 0,
-xpGain: Number(parsed.upgrades?.xpGain) || 0,
-coinGain: Number(parsed.upgrades?.coinGain) || 0
-}
-};
-}
-} catch (e) {
-console.warn("Storage restricted", e);
-}
-}
-​function saveGameData() {
-try {
-localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
-} catch (e) {}
-}
-​loadSavedData();
-​// === GAME CONFIGURATIONS ===
-const AREA_CONFIGS = {
-1: { name: 'SNOWY SHORE', bg: '#0f172a', floor: '#1e293b', accent: '#38bdf8', enemyPool: ['FOX', 'SEAL'], boss: 'FROSTFANG' },
-2: { name: 'FROZEN TUNDRA', bg: '#082f49', floor: '#0c4a6e', accent: '#0284c7', enemyPool: ['FOX', 'WOLF', 'SEAL'], boss: 'ARCTIC ALPHA' },
-3: { name: 'ICE CAVERN', bg: '#172554', floor: '#1e3a8a', accent: '#60a5fa', enemyPool: ['OWL', 'CRAWLER', 'WALRUS'], boss: 'GLACIER GOLEM' },
-4: { name: 'FROZEN FOREST', bg: '#064e3b', floor: '#065f46', accent: '#34d399', enemyPool: ['WOLF', 'BAT', 'OWL'], boss: 'SNOW OWL KING' },
-5: { name: 'GLACIER VALLEY', bg: '#311042', floor: '#4a1d6d', accent: '#c084fc', enemyPool: ['WALRUS', 'BEAR', 'GOLEM'], boss: 'MAMMOTH PRIME' },
-6: { name: 'FROZEN FORTRESS', bg: '#2e1065', floor: '#3b0764', accent: '#e879f9', enemyPool: ['CRAWLER', 'BAT', 'BEAR', 'GOLEM'], boss: 'FROST KING' }
-};
-​const ENEMY_STATS = {
-FOX: { name: 'Arctic Fox', hp: 40, speed: 2.4, size: 16, xp: 10, color: '#f97316' },
-SEAL: { name: 'Seal', hp: 70, speed: 1.4, size: 20, xp: 15, color: '#94a3b8' },
-WOLF: { name: 'Arctic Wolf', hp: 90, speed: 2.0, size: 18, xp: 20, color: '#cbd5e1' },
-OWL: { name: 'Snow Owl', hp: 50, speed: 1.6, size: 15, xp: 22, color: '#e2e8f0' },
-CRAWLER: { name: 'Ice Crawler', hp: 60, speed: 2.8, size: 14, xp: 18, color: '#38bdf8' },
-WALRUS: { name: 'Walrus', hp: 160, speed: 1.0, size: 26, xp: 30, color: '#64748b' },
-BEAR: { name: 'Polar Bear', hp: 220, speed: 1.2, size: 28, xp: 45, color: '#f8fafc' },
-GOLEM: { name: 'Ice Golem', hp: 320, speed: 0.8, size: 32, xp: 60, color: '#0284c7' },
-BAT: { name: 'Frost Bat', hp: 45, speed: 3.0, size: 13, xp: 15, color: '#a855f7' }
-};
-​const BOSS_STATS = {
-'FROSTFANG': { name: 'Frostfang', hp: 900, size: 40, xp: 200, color: '#38bdf8' },
-'ARCTIC ALPHA': { name: 'Arctic Alpha', hp: 1400, size: 42, xp: 300, color: '#e2e8f0' },
-'GLACIER GOLEM': { name: 'Glacier Golem', hp: 2000, size: 48, xp: 450, color: '#0284c7' },
-'SNOW OWL KING': { name: 'Snow Owl King', hp: 2600, size: 44, xp: 600, color: '#f8fafc' },
-'MAMMOTH PRIME': { name: 'Mammoth Prime', hp: 3500, size: 52, xp: 800, color: '#c084fc' },
-'FROST KING': { name: 'Frost King', hp: 5000, size: 55, xp: 1200, color: '#e879f9' }
-};
-​const UPGRADES_LIST = [
-{ id: 'FROZEN_FISH', name: 'Frozen Fish', desc: 'Serangan memberikan efek lambat (slow).', rarity: 'COMMON' },
-{ id: 'TWIN_SALMON', name: 'Twin Salmon', desc: 'Melempar proyeksil ikan tambahan.', rarity: 'RARE' },
-{ id: 'HEAVY_TROUT', name: 'Heavy Trout', desc: 'Meningkatkan Damage & Knockback.', rarity: 'COMMON' },
-{ id: 'RAPID_TUNA', name: 'Rapid Tuna', desc: 'Meningkatkan kecepatan melempar.', rarity: 'COMMON' },
-{ id: 'DRILL_MACKEREL', name: 'Drill Mackerel', desc: 'Ikan menembus musuh.', rarity: 'RARE' },
-{ id: 'RICOCHET_COD', name: 'Ricochet Cod', desc: 'Ikan memantul ke musuh sekitar.', rarity: 'EPIC' },
-{ id: 'ICE_BURST', name: 'Ice Burst', desc: 'Musuh mati meledakkan pecahan es.', rarity: 'RARE' },
-{ id: 'BABY_PENGUIN', name: 'Baby Companion', desc: 'Penguin kecil membantu melempar ikan.', rarity: 'EPIC' },
-{ id: 'FROST_SHIELD', name: 'Frost Shield', desc: 'Perisai yang menyerap serangan musuh.', rarity: 'EPIC' },
-{ id: 'HEALTH_REGROWTH', name: 'Health Regrowth', desc: 'Memulihkan HP setiap selesai room.', rarity: 'COMMON' },
-{ id: 'CRITICAL_FISH', name: 'Critical Fish', desc: 'Meningkatkan peluang Critical Hit.', rarity: 'RARE' },
-{ id: 'FROST_NOVA', name: 'Frost Nova', desc: 'Mengeluarkan ledakan es berkala.', rarity: 'LEGENDARY' },
-{ id: 'FISH_MAGNET', name: 'Fish Magnet', desc: 'Memperbesar jangkauan mengambil XP & Koin.', rarity: 'COMMON' },
-{ id: 'ICE_ARMOR', name: 'Ice Armor', desc: 'Mengurangi damage yang diterima Mr. Karo.', rarity: 'RARE' }
-];
-​// === CANVAS & GLOBAL STATE ===
-let canvas, ctx, minimapCanvas, minimapCtx;
-let camera = { x: 0, y: 0, shake: 0 };
-let currentArea = 1;
-let currentRoom = 1;
-let isGameRunning = false;
-let isPaused = false;
-let lastTime = 0;
-​let player = null;
-let enemies = [];
-let projectiles = [];
-let particles = [];
-let floatingTexts = [];
-let activeBoss = null;
-​// Joystick State
-let joystickActive = false;
-let joystickVector = { x: 0, y: 0 };
-​// Key State
-const keys = {};
-​// === CLASSES ===
-class Player {
-constructor() {
-this.x = 0;
-this.y = 0;
-this.radius = 18;
-this.level = 1;
-this.xp = 0;
-this.xpToNextLevel = 50;
-​const pHp = (saveData.upgrades?.hp || 0) * 15;
-const pDmg = (saveData.upgrades?.dmg || 0) * 5;
-const pSpd = (saveData.upgrades?.speed || 0) * 0.3;
-const pAtkSpd = (saveData.upgrades?.atkSpd || 0) * 0.08;
-const pCrit = (saveData.upgrades?.crit || 0) * 0.03;
-​this.maxHp = 100 + pHp;
-this.hp = this.maxHp;
-this.speed = 3.4 + pSpd;
-this.damage = 25 + pDmg;
-this.attackCooldown = Math.max(0.2, 0.55 - pAtkSpd);
-this.attackTimer = 0;
-this.critChance = 0.20 + pCrit;
-this.damageReduction = 0;
-​this.upgrades = {};
-​this.shieldActive = false;
-this.shieldCooldown = 0;
-this.petTimer = 0;
-this.petX = 0;
-this.petY = 0;
-this.novaTimer = 0;
-​this.squashX = 1;
-this.squashY = 1;
-}
-​update(dt) {
-let moveX = 0;
-let moveY = 0;
-​if (keys['KeyW'] || keys['ArrowUp']) moveY -= 1;
-if (keys['KeyS'] || keys['ArrowDown']) moveY += 1;
-if (keys['KeyA'] || keys['ArrowLeft']) moveX -= 1;
-if (keys['KeyD'] || keys['ArrowRight']) moveX += 1;
-​if (joystickActive) {
-moveX = joystickVector.x;
-moveY = joystickVector.y;
-}
-​const len = Math.hypot(moveX, moveY);
-if (len > 0) {
-const normX = moveX / (len > 1 ? len : 1);
-const normY = moveY / (len > 1 ? len : 1);
-this.x += normX * this.speed * dt * 60;
-this.y += normY * this.speed * dt * 60;
-​this.squashX = 1 + Math.sin(Date.now() * 0.015) * 0.1;
-this.squashY = 1 - Math.sin(Date.now() * 0.015) * 0.1;
-} else {
-this.squashX = 1;
-this.squashY = 1;
-}
-​this.attackTimer -= dt;
-if (this.attackTimer <= 0) {
-this.autoAttack();
-this.attackTimer = this.attackCooldown;
-}
-​const shieldLvl = this.upgrades['FROST_SHIELD'] || 0;
-if (shieldLvl > 0 && !this.shieldActive) {
-this.shieldCooldown -= dt;
-if (this.shieldCooldown <= 0) {
-this.shieldActive = true;
-spawnFloatingText(this.x, this.y - 30, 'PERISAI SIAP!', '#38bdf8', false);
-}
-}
-​const petLvl = this.upgrades['BABY_PENGUIN'] || 0;
-if (petLvl > 0) {
-this.petX += (this.x - 30 - this.petX) * 0.1;
-this.petY += (this.y - 15 - this.petY) * 0.1;
-this.petTimer -= dt;
-​const interval = petLvl === 1 ? 1.5 : (petLvl === 2 ? 0.9 : 0.7);
-if (this.petTimer <= 0) {
-this.petTimer = interval;
-const target = findNearestEnemy(this.petX, this.petY);
-if (target) {
-const angle = Math.atan2(target.y - this.petY, target.x - this.petX);
-projectiles.push(new FishProjectile(this.petX, this.petY, angle, this.damage * 0.5, true));
-}
-}
-}
-​const novaLvl = this.upgrades['FROST_NOVA'] || 0;
-if (novaLvl > 0) {
-this.novaTimer += dt;
-if (this.novaTimer >= 4.0) {
-this.novaTimer = 0;
-this.triggerFrostNova(novaLvl);
-}
-}
-}
-​triggerFrostNova(lvl) {
-const radius = 120 + lvl * 30;
-audio.playHit();
-addCameraShake(3);
-spawnParticles(this.x, this.y, '#38bdf8', 30);
-enemies.forEach(e => {
-if (Math.hypot(e.x - this.x, e.y - this.y) <= radius) {
-e.takeDamage(this.damage * (0.8 + lvl * 0.2), false);
-e.applySlow(0.5, 3.0);
-}
-});
-}
-​autoAttack() {
-const target = findNearestEnemy(this.x, this.y);
-if (!target) return;
-​const angle = Math.atan2(target.y - this.y, target.x - this.x);
-audio.playThrow();
-​const twinLvl = this.upgrades['TWIN_SALMON'] || 0;
-const count = 1 + twinLvl;
-const spread = 0.18;
-​for (let i = 0; i < count; i++) {
-const offset = (i - (count - 1) / 2) * spread;
-projectiles.push(new FishProjectile(this.x, this.y, angle + offset, this.damage));
-}
-}
-​takeDamage(amt) {
-if (this.shieldActive) {
-this.shieldActive = false;
-const shieldLvl = this.upgrades['FROST_SHIELD'] || 1;
-this.shieldCooldown = shieldLvl === 1 ? 15 : (shieldLvl === 2 ? 10 : 6);
-spawnParticles(this.x, this.y, '#38bdf8', 20);
-spawnFloatingText(this.x, this.y - 30, 'BLOCKED!', '#38bdf8', true);
-return;
-}
-​const actualDamage = Math.max(1, amt * (1 - this.damageReduction));
-this.hp -= actualDamage;
-audio.playHit();
-addCameraShake(4);
-spawnParticles(this.x, this.y, '#ef4444', 12);
-spawnFloatingText(this.x, this.y - 25, -${Math.round(actualDamage)}, '#ef4444');
-​updateHUD();
-​if (this.hp <= 0) {
-this.hp = 0;
-triggerGameOver();
-}
-}
-​addXP(amount) {
-const gainBonus = 1 + ((saveData.upgrades?.xpGain || 0) * 0.1);
-const actualXP = amount * gainBonus;
-this.xp += actualXP;
-spawnFloatingText(this.x, this.y - 20, +${Math.round(actualXP)} XP, '#f59e0b');
-​if (this.xp >= this.xpToNextLevel) {
-this.xp -= this.xpToNextLevel;
-this.level++;
-this.xpToNextLevel = Math.round(this.xpToNextLevel * 1.35);
-audio.playLevelUp();
-spawnParticles(this.x, this.y, '#f59e0b', 30);
-triggerLevelUpModal();
-}
-updateHUD();
-}
-​draw() {
-ctx.save();
-ctx.translate(this.x, this.y);
-​ctx.beginPath();
-ctx.ellipse(0, 16, 18, 8, 0, 0, Math.PI * 2);
-ctx.fillStyle = 'rgba(0,0,0,0.3)';
-ctx.fill();
-​if (this.shieldActive) {
-ctx.beginPath();
-ctx.arc(0, 0, 26 + Math.sin(Date.now() * 0.008) * 3, 0, Math.PI * 2);
-ctx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
-ctx.lineWidth = 3;
-ctx.stroke();
-ctx.fillStyle = 'rgba(56, 189, 248, 0.15)';
-ctx.fill();
-}
-​ctx.scale(this.squashX || 1, this.squashY || 1);
-​ctx.beginPath();
-ctx.ellipse(0, 0, 16, 18, 0, 0, Math.PI * 2);
-ctx.fillStyle = '#0f172a';
-ctx.fill();
-​ctx.beginPath();
-ctx.ellipse(0, 3, 11, 13, 0, 0, Math.PI * 2);
-ctx.fillStyle = '#f8fafc';
-ctx.fill();
-​ctx.fillStyle = '#0f172a';
-ctx.beginPath(); ctx.arc(-5, -5, 2.5, 0, Math.PI * 2); ctx.fill();
-ctx.beginPath(); ctx.arc(5, -5, 2.5, 0, Math.PI * 2); ctx.fill();
-​ctx.fillStyle = '#f97316';
-ctx.beginPath();
-ctx.moveTo(-4, -1); ctx.lineTo(4, -1); ctx.lineTo(0, 5);
-ctx.closePath();
-ctx.fill();
-​ctx.fillStyle = '#ea580c';
-ctx.beginPath(); ctx.arc(-7, 16, 4, 0, Math.PI * 2); ctx.fill();
-ctx.beginPath(); ctx.arc(7, 16, 4, 0, Math.PI * 2); ctx.fill();
-​ctx.restore();
-​if (this.upgrades['BABY_PENGUIN'] > 0) {
-ctx.save();
-ctx.translate(this.petX, this.petY);
-ctx.beginPath();
-ctx.arc(0, 0, 9, 0, Math.PI * 2);
-ctx.fillStyle = '#38bdf8';
-ctx.fill();
-ctx.beginPath();
-ctx.arc(0, 1, 6, 0, Math.PI * 2);
-ctx.fillStyle = '#ffffff';
-ctx.fill();
-ctx.restore();
-}
-}
-}
-​class FishProjectile {
-constructor(x, y, angle, baseDamage, isPet = false) {
-this.x = x;
-this.y = y;
-this.angle = angle;
-this.speed = 8.5;
-this.radius = isPet ? 6 : 9;
-this.isPet = isPet;
-​const heavyLvl = (player ? player.upgrades['HEAVY_TROUT'] : 0) || 0;
-this.damage = baseDamage + (heavyLvl * 10);
-this.knockback = 4 + heavyLvl * 3;
-​this.pierceLeft = (player ? player.upgrades['DRILL_MACKEREL'] : 0) || 0;
-​this.hitEnemies = new Set();
-this.dead = false;
-}
-​update(dt) {
-this.x += Math.cos(this.angle) * this.speed * dt * 60;
-this.y += Math.sin(this.angle) * this.speed * dt * 60;
-​if (Math.random() < 0.4) {
-particles.push({
-x: this.x, y: this.y,
-vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5,
-size: 2, color: '#a5f3fc', life: 0.2
-});
-}
-​const px = player ? player.x : 0;
-const py = player ? player.y : 0;
-if (Math.abs(this.x - px) > 600 || Math.abs(this.y - py) > 600) {
-this.dead = true;
-}
-}
-​draw() {
-ctx.save();
-ctx.translate(this.x, this.y);
-ctx.rotate(this.angle);
-​ctx.fillStyle = this.isPet ? '#93c5fd' : '#38bdf8';
-ctx.beginPath();
-ctx.ellipse(0, 0, this.radius * 1.5, this.radius * 0.8, 0, 0, Math.PI * 2);
-ctx.fill();
-​ctx.beginPath();
-ctx.moveTo(-this.radius * 1.2, 0);
-ctx.lineTo(-this.radius * 2, -this.radius * 0.6);
-ctx.lineTo(-this.radius * 2, this.radius * 0.6);
-ctx.closePath();
-ctx.fill();
-​ctx.restore();
-}
-}
-​class Enemy {
-constructor(typeKey, isElite = false) {
-const config = ENEMY_STATS[typeKey] || ENEMY_STATS['FOX'];
-this.typeKey = typeKey;
-this.name = config.name;
-this.isElite = isElite;
-​const areaMult = 1 + (currentArea - 1) * 0.4;
-this.maxHp = config.hp * areaMult * (isElite ? 2.5 : 1);
-this.hp = this.maxHp;
-this.speed = config.speed * (isElite ? 1.15 : 1);
-this.size = config.size * (isElite ? 1.3 : 1);
-this.xp = config.xp * (isElite ? 2.5 : 1);
-this.color = config.color;
-​this.x = 0;
-this.y = 0;
-this.slowFactor = 1;
-this.slowTimer = 0;
-this.dead = false;
-}
-​applySlow(factor, duration) {
-this.slowFactor = Math.min(this.slowFactor, factor);
-this.slowTimer = duration;
-}
-​takeDamage(amount, canCrit = true) {
-let finalDamage = amount;
-let isCrit = false;
-​if (canCrit && player && Math.random() < player.critChance) {
-isCrit = true;
-finalDamage *= 1.5;
-}
-​this.hp -= finalDamage;
-​if (isCrit) {
-audio.playCrit();
-spawnFloatingText(this.x, this.y - 25, ${Math.round(finalDamage)}!, '#f59e0b', true);
-spawnParticles(this.x, this.y, '#f59e0b', 12);
-} else {
-audio.playHit();
-spawnFloatingText(this.x, this.y - 20, ${Math.round(finalDamage)}, '#ffffff');
-spawnParticles(this.x, this.y, '#bae6fd', 6);
-}
-​if (this.hp <= 0 && !this.dead) {
-this.dead = true;
-audio.playKill();
-if (player) player.addXP(this.xp);
-​const coinBonus = 1 + ((saveData.upgrades?.coinGain || 0) * 0.15);
-const baseCoins = this.isElite ? Math.floor(Math.random() * 5) + 5 : Math.floor(Math.random() * 3) + 1;
-const finalCoins = Math.round(baseCoins * coinBonus);
-saveData.coins += finalCoins;
-​spawnParticles(this.x, this.y, '#f59e0b', 16);
-​const burstLvl = (player ? player.upgrades['ICE_BURST'] : 0) || 0;
-if (burstLvl > 0) {
-const shards = burstLvl * 3;
-for (let i = 0; i < shards; i++) {
-const a = (Math.PI * 2 / shards) * i;
-projectiles.push(new FishProjectile(this.x, this.y, a, (player ? player.damage : 25) * 0.4, true));
-}
-}
-}
-}
-​update(dt) {
-if (this.slowTimer > 0) {
-this.slowTimer -= dt;
-if (this.slowTimer <= 0) this.slowFactor = 1;
-}
-​if (!player) return;
-​const effSpeed = this.speed * this.slowFactor;
-const angle = Math.atan2(player.y - this.y, player.x - this.x);
-this.x += Math.cos(angle) * effSpeed * dt * 60;
-this.y += Math.sin(angle) * effSpeed * dt * 60;
-​const dist = Math.hypot(player.x - this.x, player.y - this.y);
-if (dist < this.size + player.radius) {
-player.takeDamage(12 * (1 + currentArea * 0.2));
-}
-}
-​draw() {
-ctx.save();
-ctx.translate(this.x, this.y);
-​ctx.beginPath();
-ctx.ellipse(0, this.size * 0.7, this.size, this.size * 0.4, 0, 0, Math.PI * 2);
-ctx.fillStyle = 'rgba(0,0,0,0.25)';
-ctx.fill();
-​if (this.isElite) {
-ctx.beginPath();
-ctx.arc(0, 0, this.size + 6, 0, Math.PI * 2);
-ctx.strokeStyle = '#f59e0b';
-ctx.lineWidth = 2;
-ctx.stroke();
-}
-​ctx.beginPath();
-ctx.arc(0, 0, this.size, 0, Math.PI * 2);
-ctx.fillStyle = this.color;
-ctx.fill();
-​ctx.fillStyle = '#0f172a';
-ctx.beginPath(); ctx.arc(-this.size * 0.3, -this.size * 0.2, 3, 0, Math.PI * 2); ctx.fill();
-ctx.beginPath(); ctx.arc(this.size * 0.3, -this.size * 0.2, 3, 0, Math.PI * 2); ctx.fill();
-​ctx.restore();
-}
-}
-​class BossEnemy {
-constructor(bossKey) {
-const config = BOSS_STATS[bossKey] || BOSS_STATS['FROSTFANG'];
-this.key = bossKey;
-this.name = config.name;
-this.maxHp = config.hp * (1 + (currentArea - 1) * 0.5);
-this.hp = this.maxHp;
-this.size = config.size;
-this.xp = config.xp;
-this.color = config.color;
-​this.x = 0;
-this.y = -250;
-this.speed = 1.3;
-this.enraged = false;
-this.dead = false;
-}
-​takeDamage(amount) {
-this.hp -= amount;
-audio.playHit();
-spawnFloatingText(this.x, this.y - 40, ${Math.round(amount)}, '#f43f5e', true);
-​if (this.hp <= this.maxHp * 0.5 && !this.enraged) {
-this.enraged = true;
-this.speed *= 1.3;
-audio.playBossWarning();
-const tag = document.getElementById('boss-enraged-tag');
-if (tag) tag.classList.remove('hidden');
-}
-​updateBossHUD();
-​if (this.hp <= 0 && !this.dead) {
-this.dead = true;
-audio.playKill();
-if (player) player.addXP(this.xp);
-saveData.coins += 50 * currentArea;
-addCameraShake(10);
-}
-}
-​update(dt) {
-if (!player) return;
-const angle = Math.atan2(player.y - this.y, player.x - this.x);
-this.x += Math.cos(angle) * this.speed * dt * 60;
-this.y += Math.sin(angle) * this.speed * dt * 60;
-​const dist = Math.hypot(player.x - this.x, player.y - this.y);
-if (dist < this.size + player.radius) {
-player.takeDamage(25);
-}
-}
-​draw() {
-ctx.save();
-ctx.translate(this.x, this.y);
-​ctx.beginPath();
-ctx.ellipse(0, this.size * 0.8, this.size * 1.1, this.size * 0.4, 0, 0, Math.PI * 2);
-ctx.fillStyle = 'rgba(0,0,0,0.35)';
-ctx.fill();
-​ctx.beginPath();
-ctx.arc(0, 0, this.size, 0, Math.PI * 2);
-ctx.fillStyle = this.color;
-ctx.fill();
-​ctx.restore();
-}
-}
-​// === GAME ENGINE FUNCTIONS ===
-function initGame() {
-canvas = document.getElementById('gameCanvas');
-ctx = canvas.getContext('2d');
-minimapCanvas = document.getElementById('minimapCanvas');
-minimapCtx = minimapCanvas.getContext('2d');
-​resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
-​setupControls();
-setupUIEvents();
-​requestAnimationFrame(gameLoop);
-}
-​function resizeCanvas() {
-if (!canvas) return;
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-}
-​function startNewRun(areaNum = 1) {
-currentArea = areaNum;
-currentRoom = 1;
-player = new Player();
-enemies = [];
-projectiles = [];
-particles = [];
-floatingTexts = [];
-activeBoss = null;
-​isGameRunning = true;
-isPaused = false;
-​hideAllModals();
-document.getElementById('hud-top').classList.remove('hidden');
-document.getElementById('joystick-zone').classList.remove('hidden');
-​spawnRoomEnemies();
-updateHUD();
-}
-​function exitToMainMenu() {
-isGameRunning = false;
-isPaused = false;
-player = null;
-enemies = [];
-activeBoss = null;
-​hideAllModals();
-document.getElementById('hud-top').classList.add('hidden');
-document.getElementById('joystick-zone').classList.add('hidden');
-document.getElementById('boss-hp-container').classList.add('hidden');
-​document.getElementById('modal-menu').classList.remove('hidden');
-}
-​function spawnRoomEnemies() {
-enemies = [];
-activeBoss = null;
-const areaCfg = AREA_CONFIGS[currentArea] || AREA_CONFIGS[1];
-​const bossContainer = document.getElementById('boss-hp-container');
-if (bossContainer) bossContainer.classList.add('hidden');
-​if (currentRoom === 5) {
-activeBoss = new BossEnemy(areaCfg.boss);
-if (bossContainer) bossContainer.classList.remove('hidden');
-updateBossHUD();
-} else {
-const count = 3 + currentRoom + currentArea;
-for (let i = 0; i < count; i++) {
-const pool = areaCfg.enemyPool;
-const type = pool[Math.floor(Math.random() * pool.length)];
-const isElite = Math.random() < 0.15;
-const e = new Enemy(type, isElite);
-​const angle = Math.random() * Math.PI * 2;
-const dist = 250 + Math.random() * 200;
-const px = player ? player.x : 0;
-const py = player ? player.y : 0;
-e.x = px + Math.cos(angle) * dist;
-e.y = py + Math.sin(angle) * dist;
-​enemies.push(e);
-}
-}
-}
-​function findNearestEnemy(x, y) {
-let nearest = null;
-let minDist = Infinity;
-​if (activeBoss && !activeBoss.dead) {
-return activeBoss;
-}
-​enemies.forEach(e => {
-if (!e.dead) {
-const d = Math.hypot(e.x - x, e.y - y);
-if (d < minDist) {
-minDist = d;
-nearest = e;
-}
-}
-});
-return nearest;
-}
-​function addCameraShake(amt) {
-camera.shake = Math.max(camera.shake, amt);
-}
-​function spawnParticles(x, y, color, count = 8) {
-for (let i = 0; i < count; i++) {
-particles.push({
-x, y,
-vx: (Math.random() - 0.5) * 6,
-vy: (Math.random() - 0.5) * 6,
-color,
-size: 3 + Math.random() * 3,
-life: 0.4 + Math.random() * 0.3
-});
-}
-}
-​function spawnFloatingText(x, y, text, color = '#ffffff', isBig = false) {
-floatingTexts.push({
-x, y, text, color, isBig,
-vy: -1.2,
-alpha: 1.0,
-life: 0.8
-});
-}
-​function checkRoomCompletion() {
-if (!isGameRunning || isPaused) return;
-​const bossDead = activeBoss ? activeBoss.dead : true;
-const enemiesDead = enemies.every(e => e.dead);
-​if (bossDead && enemiesDead) {
-isPaused = true;
-​const regrowthLvl = player ? (player.upgrades['HEALTH_REGROWTH'] || 0) : 0;
-let healAmt = 0;
-if (regrowthLvl > 0 && player) {
-const pct = regrowthLvl * 0.05;
-healAmt = Math.round(player.maxHp * pct);
-player.hp = Math.min(player.maxHp, player.hp + healAmt);
-}
-​const bonusCoins = 10 + currentRoom * 2;
-const bonusXP = 20 + currentRoom * 5;
-​saveData.coins += bonusCoins;
-if (player) player.addXP(bonusXP);
-saveGameData();
-​document.getElementById('rc-heal').innerText = +${healAmt} HP;
-document.getElementById('rc-coins').innerText = 🐟 +${bonusCoins};
-document.getElementById('rc-xp').innerText = +${bonusXP} XP;
-document.getElementById('modal-room-clear').classList.remove('hidden');
-}
-}
-​// === GAME LOOP ===
-function gameLoop(timestamp) {
-const dt = Math.min(0.05, (timestamp - lastTime) / 1000 || 0.016);
-lastTime = timestamp;
-​if (isGameRunning && !isPaused && player) {
-player.update(dt);
-​camera.x += (player.x - camera.x) * 0.1;
-camera.y += (player.y - camera.y) * 0.1;
-​if (camera.shake > 0) {
-camera.shake -= dt * 15;
-if (camera.shake < 0) camera.shake = 0;
-}
-​projectiles.forEach(p => p.update(dt));
-projectiles = projectiles.filter(p => !p.dead);
-​projectiles.forEach(p => {
-const targets = activeBoss ? [activeBoss] : enemies;
-targets.forEach(e => {
-if (!e.dead && !p.hitEnemies.has(e)) {
-const dist = Math.hypot(e.x - p.x, e.y - p.y);
-if (dist < e.size + p.radius) {
-p.hitEnemies.add(e);
-e.takeDamage(p.damage);
-​const frozenLvl = player ? (player.upgrades['FROZEN_FISH'] || 0) : 0;
-if (frozenLvl > 0) {
-e.applySlow(1 - (0.15 + frozenLvl * 0.1), 2.0);
-}
-​if (p.pierceLeft > 0) {
-p.pierceLeft--;
-} else {
-p.dead = true;
-}
-}
-}
-});
-});
-​if (activeBoss && !activeBoss.dead) activeBoss.update(dt);
-enemies.forEach(e => {
-if (!e.dead) e.update(dt);
-});
-​particles.forEach(pt => {
-pt.x += pt.vx;
-pt.y += pt.vy;
-pt.life -= dt;
-});
-particles = particles.filter(pt => pt.life > 0);
-​floatingTexts.forEach(ft => {
-ft.y += ft.vy;
-ft.life -= dt;
-ft.alpha = Math.max(0, ft.life / 0.8);
-});
-floatingTexts = floatingTexts.filter(ft => ft.life > 0);
-​checkRoomCompletion();
-}
-​render();
-renderMinimap();
-​requestAnimationFrame(gameLoop);
-}
-​function render() {
-if (!ctx) return;
-ctx.clearRect(0, 0, canvas.width, canvas.height);
-​const areaCfg = AREA_CONFIGS[currentArea] || AREA_CONFIGS[1];
-const px = player ? player.x : camera.x;
-const py = player ? player.y : camera.y;
-​ctx.save();
-const shakeX = (Math.random() - 0.5) * camera.shake * 4;
-const shakeY = (Math.random() - 0.5) * camera.shake * 4;
-ctx.translate(canvas.width / 2 - camera.x + shakeX, canvas.height / 2 - camera.y + shakeY);
-​ctx.fillStyle = areaCfg.floor;
-ctx.fillRect(px - 1000, py - 1000, 2000, 2000);
-​ctx.strokeStyle = 'rgba(255,255,255,0.04)';
-ctx.lineWidth = 2;
-const gridSize = 80;
-const startX = Math.floor((px - 1000) / gridSize) * gridSize;
-const startY = Math.floor((py - 1000) / gridSize) * gridSize;
-​for (let x = startX; x < px + 1000; x += gridSize) {
-ctx.beginPath(); ctx.moveTo(x, py - 1000); ctx.lineTo(x, py + 1000); ctx.stroke();
-}
-for (let y = startY; y < py + 1000; y += gridSize) {
-ctx.beginPath(); ctx.moveTo(px - 1000, y); ctx.lineTo(px + 1000, y); ctx.stroke();
-}
-​if (isGameRunning && player) {
-enemies.forEach(e => { if (!e.dead) e.draw(); });
-if (activeBoss && !activeBoss.dead) activeBoss.draw();
-projectiles.forEach(p => p.draw());
-player.draw();
-​particles.forEach(pt => {
-ctx.beginPath();
-ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
-ctx.fillStyle = pt.color;
-ctx.fill();
-});
-​floatingTexts.forEach(ft => {
-ctx.save();
-ctx.globalAlpha = ft.alpha;
-ctx.font = ft.isBig ? '900 18px system-ui' : '700 13px system-ui';
-ctx.fillStyle = ft.color;
-ctx.textAlign = 'center';
-ctx.fillText(ft.text, ft.x, ft.y);
-ctx.restore();
-});
-}
-​ctx.restore();
-}
-​function renderMinimap() {
-if (!minimapCtx || !isGameRunning || !player) return;
-minimapCtx.clearRect(0, 0, 90, 90);
-​minimapCtx.fillStyle = 'rgba(15, 23, 42, 0.8)';
-minimapCtx.fillRect(0, 0, 90, 90);
-​const scale = 0.12;
-const cx = 45;
-const cy = 45;
-​minimapCtx.beginPath();
-minimapCtx.arc(cx, cy, 3, 0, Math.PI * 2);
-minimapCtx.fillStyle = '#38bdf8';
-minimapCtx.fill();
-​enemies.forEach(e => {
-if (!e.dead) {
-const mx = cx + (e.x - player.x) * scale;
-const my = cy + (e.y - player.y) * scale;
-if (mx >= 0 && mx <= 90 && my >= 0 && my <= 90) {
-minimapCtx.beginPath();
-minimapCtx.arc(mx, my, e.isElite ? 3.5 : 2, 0, Math.PI * 2);
-minimapCtx.fillStyle = e.isElite ? '#f59e0b' : '#ef4444';
-minimapCtx.fill();
-}
-}
-});
-​if (activeBoss && !activeBoss.dead) {
-const bx = cx + (activeBoss.x - player.x) * scale;
-const by = cy + (activeBoss.y - player.y) * scale;
-minimapCtx.beginPath();
-minimapCtx.arc(Math.max(5, Math.min(85, bx)), Math.max(5, Math.min(85, by)), 5, 0, Math.PI * 2);
-minimapCtx.fillStyle = '#a855f7';
-minimapCtx.fill();
-}
-}
-​// === UI & MODALS LOGIC ===
-function updateHUD() {
-if (!player) return;
-​const hpBar = document.getElementById('hp-bar');
-const hpText = document.getElementById('hp-text');
-const xpBar = document.getElementById('xp-bar');
-const levelBadge = document.getElementById('level-badge');
-const coinCounter = document.getElementById('coin-counter');
-const areaTitle = document.getElementById('area-title');
-const roomTitle = document.getElementById('room-title');
-​if (hpBar) hpBar.style.width = ${Math.max(0, (player.hp / player.maxHp) * 100)}%;
-if (hpText) hpText.innerText = ${Math.ceil(player.hp)} / ${player.maxHp};
-if (xpBar) xpBar.style.width = ${Math.min(100, (player.xp / player.xpToNextLevel) * 100)}%;
-if (levelBadge) levelBadge.innerText = LV. ${player.level};
-if (coinCounter) coinCounter.innerText = ${saveData.coins};
-​const cfg = AREA_CONFIGS[currentArea] || AREA_CONFIGS[1];
-if (areaTitle) areaTitle.innerText = AREA ${currentArea}: ${cfg.name};
-if (roomTitle) roomTitle.innerText = ROOM ${currentRoom} / 5;
-}
-​function updateBossHUD() {
-if (!activeBoss) return;
-const bar = document.getElementById('boss-hp-bar');
-const name = document.getElementById('boss-name');
-if (bar) bar.style.width = ${Math.max(0, (activeBoss.hp / activeBoss.maxHp) * 100)}%;
-if (name) name.innerText = activeBoss.name;
-}
-​function hideAllModals() {
-document.querySelectorAll('#modal-menu, #modal-pause, #modal-area, #modal-shop, #modal-upgrade, #modal-room-clear, #modal-gameover, #modal-victory').forEach(m => {
-m.classList.add('hidden');
-});
-}
-​function triggerLevelUpModal() {
-if (!player) return;
-isPaused = true;
-const container = document.getElementById('upgrade-cards');
-if (!container) return;
-container.innerHTML = '';
-​const available = UPGRADES_LIST.filter(u => (player.upgrades[u.id] || 0) < 3);
-const shuffled = [...available].sort(() => 0.5 - Math.random()).slice(0, 3);
-​shuffled.forEach(upg => {
-const currLvl = player.upgrades[upg.id] || 0;
-const card = document.createElement('div');
-card.className = glass-panel p-5 rounded-2xl border-2 hover:scale-105 cursor-pointer text-left btn-action flex flex-col justify-between rarity-${upg.rarity.toLowerCase()};
-​card.innerHTML = <div> <div class="flex justify-between items-center mb-2"> <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-sky-300 uppercase">${upg.rarity}</span> <span class="text-xs font-mono font-bold text-amber-400">LV. ${currLvl} ➔ ${currLvl + 1}</span> </div> <h4 class="font-black text-white text-base mb-1">${upg.name}</h4> <p class="text-xs text-slate-300 leading-relaxed">${upg.desc}</p> </div>;
-​card.onclick = () => {
-player.upgrades[upg.id] = currLvl + 1;
-document.getElementById('modal-upgrade').classList.add('hidden');
-isPaused = false;
-audio.playClick();
-};
-​container.appendChild(card);
-});
-​document.getElementById('modal-upgrade').classList.remove('hidden');
-}
-​function triggerGameOver() {
-isGameRunning = false;
-saveGameData();
-document.getElementById('go-area').innerText = currentArea;
-document.getElementById('go-room').innerText = currentRoom;
-document.getElementById('go-coins').innerText = saveData.coins;
-document.getElementById('modal-gameover').classList.remove('hidden');
-}
-​function openAreaSelect() {
-const list = document.getElementById('area-list');
-if (!list) return;
-list.innerHTML = '';
-​for (let a = 1; a <= 6; a++) {
-const cfg = AREA_CONFIGS[a];
-const isUnlocked = a <= saveData.unlockedArea;
-const card = document.createElement('div');
-​card.className = glass-panel p-4 rounded-2xl border-2 ${ isUnlocked ? 'border-sky-400/40 hover:border-sky-400 cursor-pointer btn-action' : 'border-slate-700 opacity-60 cursor-not-allowed' } flex justify-between items-center;
-​card.innerHTML = <div> <div class="text-xs font-bold text-sky-400">AREA ${a}</div> <div class="text-sm font-black text-white">${cfg.name}</div> </div> <div>${isUnlocked ? '🔓' : '🔒'}</div>;
-​if (isUnlocked) {
-card.onclick = () => {
-startNewRun(a);
-document.getElementById('modal-area').classList.add('hidden');
-};
-}
-list.appendChild(card);
-}
-document.getElementById('modal-area').classList.remove('hidden');
-}
-​function openShop() {
-const list = document.getElementById('shop-items');
-if (!list) return;
-list.innerHTML = '';
-​document.getElementById('shop-coin-count').innerText = saveData.coins;
-​const shopDefs = [
-{ id: 'hp', name: 'Base HP', desc: '+15 HP Maksimal', cost: 50 },
-{ id: 'dmg', name: 'Base Damage', desc: '+5 Damage Ikan', cost: 60 },
-{ id: 'speed', name: 'Move Speed', desc: '+0.3 Kecepatan Jalan', cost: 40 },
-{ id: 'atkSpd', name: 'Attack Speed', desc: '+8% Kecepatan Lempar', cost: 75 },
-{ id: 'crit', name: 'Critical Chance', desc: '+3% Peluang Crit', cost: 80 }
-];
-​shopDefs.forEach(item => {
-const lvl = saveData.upgrades[item.id] || 0;
-const cost = item.cost + lvl * 40;
-const card = document.createElement('div');
-​card.className = glass-panel p-3.5 rounded-2xl flex justify-between items-center border-slate-700;
-card.innerHTML = <div> <div class="text-sm font-bold text-white">${item.name} <span class="text-amber-400 text-xs">(LV. ${lvl})</span></div> <div class="text-[11px] text-slate-300">${item.desc}</div> </div> <button class="px-3 py-1.5 glass-panel bg-amber-500/20 text-amber-300 font-bold text-xs rounded-xl btn-action border-amber-400/40"> 🐟 ${cost} </button>;
-​const btn = card.querySelector('button');
-btn.onclick = () => {
-if (saveData.coins >= cost) {
-saveData.coins -= cost;
-saveData.upgrades[item.id] = lvl + 1;
-saveGameData();
-audio.playClick();
-openShop();
-}
-};
-​list.appendChild(card);
-});
-​document.getElementById('modal-shop').classList.remove('hidden');
-}
-​function setupControls() {
-window.addEventListener('keydown', e => keys[e.code] = true);
-window.addEventListener('keyup', e => keys[e.code] = false);
-​const zone = document.getElementById('joystick-zone');
-const knob = document.getElementById('joystick-knob');
-​if (zone && knob) {
-const handleTouchMove = (e) => {
-e.preventDefault();
-if (!joystickActive) return;
-const touch = e.touches[0];
-const rect = zone.getBoundingClientRect();
-const centerX = rect.left + rect.width / 2;
-const centerY = rect.top + rect.height / 2;
-​let dx = touch.clientX - centerX;
-let dy = touch.clientY - centerY;
-const maxDist = rect.width / 2;
-const dist = Math.hypot(dx, dy);
-​if (dist > maxDist) {
-dx = (dx / dist) * maxDist;
-dy = (dy / dist) * maxDist;
-}
-​knob.style.transform = translate(${dx}px, ${dy}px);
-joystickVector.x = dx / maxDist;
-joystickVector.y = dy / maxDist;
-};
-​zone.addEventListener('touchstart', e => {
-joystickActive = true;
-handleTouchMove(e);
-}, { passive: false });
-​zone.addEventListener('touchmove', handleTouchMove, { passive: false });
-​const resetJoystick = () => {
-joystickActive = false;
-joystickVector = { x: 0, y: 0 };
-knob.style.transform = 'translate(0px, 0px)';
-};
-​zone.addEventListener('touchend', resetJoystick);
-zone.addEventListener('touchcancel', resetJoystick);
-}
-}
-​function setupUIEvents() {
-document.getElementById('btn-main-play').onclick = () => {
-audio.init();
-audio.playClick();
-startNewRun(1);
-};
-​document.getElementById('btn-area-select').onclick = () => {
-audio.init();
-audio.playClick();
-openAreaSelect();
-};
-​document.getElementById('btn-close-area').onclick = () => {
-document.getElementById('modal-area').classList.add('hidden');
-};
-​document.getElementById('btn-shop').onclick = () => {
-audio.init();
-audio.playClick();
-openShop();
-};
-​document.getElementById('btn-close-shop').onclick = () => {
-document.getElementById('modal-shop').classList.add('hidden');
-};
-​// PAUSE EVENTS
-document.getElementById('btn-pause').onclick = () => {
-if (!isGameRunning) return;
-isPaused = true;
-audio.playClick();
-document.getElementById('modal-pause').classList.remove('hidden');
-};
-​document.getElementById('btn-resume').onclick = () => {
-isPaused = false;
-audio.playClick();
-document.getElementById('modal-pause').classList.add('hidden');
-};
-​document.getElementById('btn-pause-restart').onclick = () => {
-audio.playClick();
-document.getElementById('modal-pause').classList.add('hidden');
-startNewRun(currentArea);
-};
-​document.getElementById('btn-pause-main').onclick = () => {
-audio.playClick();
-exitToMainMenu();
-};
-​document.getElementById('btn-next-room').onclick = () => {
-document.getElementById('modal-room-clear').classList.add('hidden');
-isPaused = false;
-​if (currentRoom < 5) {
-currentRoom++;
-spawnRoomEnemies();
-updateHUD();
-} else {
-if (currentArea < 6) {
-currentArea++;
-currentRoom = 1;
-if (currentArea > saveData.unlockedArea) {
-saveData.unlockedArea = currentArea;
-saveGameData();
-}
-spawnRoomEnemies();
-updateHUD();
-} else {
-document.getElementById('modal-victory').classList.remove('hidden');
-}
-}
-};
-​document.getElementById('btn-retry').onclick = () => {
-startNewRun(currentArea);
-};
-​document.getElementById('btn-gameover-main').onclick = () => {
-exitToMainMenu();
-};
-​document.getElementById('btn-victory-main').onclick = () => {
-exitToMainMenu();
-};
-​document.getElementById('btn-sound-toggle').onclick = () => {
-audio.muted = !audio.muted;
-document.getElementById('btn-sound-toggle').innerText = audio.muted ? '🔇' : '🔊';
-};
-}
-​// Auto Start Engine
-window.addEventListener('DOMContentLoaded', () => {
-initGame();
-});
-</script>
+
+    <!-- GAME CANVAS -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- UI OVERLAY LAYER -->
+    <div id="ui-layer" class="absolute inset-0 pointer-events-none flex flex-col justify-between p-3 md:p-6 z-10">
+        
+        <!-- HUD TOP -->
+        <div id="hud-top" class="justify-between items-start w-full" style="display: none;">
+            <!-- PLAYER INFO & MINI-MAP -->
+            <div class="flex flex-col gap-2">
+                <div class="glass-panel p-2.5 rounded-2xl flex items-center gap-3 pointer-events-auto min-w-[210px]">
+                    <div class="text-3xl">🐧</div>
+                    <div class="flex-1">
+                        <div class="flex justify-between text-xs font-bold text-sky-200 mb-1">
+                            <span>MR. KARO</span>
+                            <span id="level-badge" class="text-amber-400">LV. 1</span>
+                        </div>
+                        <!-- HP BAR -->
+                        <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden border border-sky-900/50 mb-1">
+                            <div id="hp-bar" class="bg-gradient-to-r from-emerald-500 to-green-400 h-full w-full transition-all duration-150"></div>
+                        </div>
+                        <div class="flex justify-between text-[10px] text-slate-300 font-mono">
+                            <span id="hp-text">100 / 100</span>
+                        </div>
+                        <!-- XP BAR -->
+                        <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden mt-1">
+                            <div id="xp-bar" class="bg-gradient-to-r from-amber-500 to-yellow-300 h-full w-0 transition-all duration-150"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MINI-MAP RADAR -->
+                <div class="glass-panel p-1 rounded-2xl pointer-events-auto w-[95px] h-[95px] relative overflow-hidden flex items-center justify-center border border-sky-500/40">
+                    <canvas id="minimapCanvas" width="95" height="95" class="rounded-xl"></canvas>
+                </div>
+            </div>
+
+            <!-- ROOM / AREA INFO CARD -->
+            <div id="room-info-card" class="glass-panel px-4 py-2 rounded-2xl text-center pointer-events-auto shadow-lg">
+                <div id="area-title" class="text-[10px] sm:text-xs font-bold tracking-wider text-sky-400 uppercase">AREA 1: SNOWY SHORE</div>
+                <div id="room-title" class="text-base sm:text-lg font-black text-white">ROOM 1 / 5</div>
+                <div id="room-type-tag" class="text-[10px] font-bold text-amber-300 tracking-wider uppercase mt-0.5">NORMAL ROOM</div>
+            </div>
+
+            <!-- CURRENCY & ACTION BUTTONS -->
+            <div class="flex items-center gap-2 pointer-events-auto">
+                <div class="glass-panel px-3 py-1.5 rounded-2xl flex items-center gap-1.5 font-bold text-amber-300 text-sm">
+                    <span>🐟</span>
+                    <span id="coin-counter" class="font-mono">0</span>
+                </div>
+                <button id="btn-sound-toggle" type="button" class="glass-panel p-2.5 rounded-2xl text-base btn-action hover:bg-slate-800">🔊</button>
+                <button id="btn-pause" type="button" class="glass-panel p-2.5 rounded-2xl text-base btn-action hover:bg-slate-800">⏸️</button>
+            </div>
+        </div>
+
+        <!-- BOSS HP BAR OVERLAY -->
+        <div id="boss-hp-container" class="absolute top-16 left-1/2 -translate-x-1/2 w-11/12 max-w-md glass-panel p-3 rounded-2xl text-center pointer-events-auto border-red-500/50 z-20" style="display: none;">
+            <div class="flex justify-between text-xs font-bold mb-1">
+                <span id="boss-name" class="text-red-400 uppercase tracking-wider font-extrabold">FROSTFANG</span>
+                <span id="boss-phase-tag" class="text-sky-300 font-mono">PHASE 1</span>
+            </div>
+            <div class="w-full bg-slate-900 h-3.5 rounded-full overflow-hidden border border-red-900/60">
+                <div id="boss-hp-bar" class="bg-gradient-to-r from-red-600 via-amber-500 to-yellow-400 h-full w-full transition-all duration-150"></div>
+            </div>
+        </div>
+
+        <!-- MOBILE CONTROLS (JOYSTICK & DASH BUTTON) -->
+        <div class="w-full flex justify-between items-end mb-2">
+            <!-- JOYSTICK ZONE -->
+            <div id="joystick-zone" class="w-32 h-32 pointer-events-auto md:hidden rounded-full border-2 border-sky-400/30 bg-sky-500/10 flex items-center justify-center relative" style="touch-action: none; display: none;">
+                <div id="joystick-knob" class="w-12 h-12 bg-sky-400/60 rounded-full border border-white/80 transition-transform duration-75 pointer-events-none"></div>
+            </div>
+            
+            <!-- DASH BUTTON -->
+            <div id="dash-zone" class="pointer-events-auto flex flex-col items-center" style="display: none;">
+                <button id="btn-dash" type="button" class="glass-panel w-16 h-16 rounded-full flex flex-col items-center justify-center border-2 border-sky-300/50 btn-action bg-gradient-to-b from-sky-500/40 to-blue-600/40 text-white font-bold text-xs shadow-lg shadow-sky-500/20 active:scale-90">
+                    <span class="text-lg">💨</span>
+                    <span class="text-[9px] uppercase font-mono tracking-tighter">DASH</span>
+                </button>
+                <div class="w-14 bg-slate-900 h-1.5 rounded-full overflow-hidden mt-1 border border-sky-900">
+                    <div id="dash-cd-bar" class="bg-sky-400 h-full w-full transition-all duration-75"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS LAYER -->
+    
+    <!-- MAIN MENU MODAL -->
+    <div id="modal-menu" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50 pointer-events-auto" style="display: flex;">
+        <div class="text-center max-w-sm w-full">
+            <!-- STUDENT IDENTIFIER BANNER -->
+            <div class="glass-panel py-2.5 px-4 rounded-2xl border-amber-400/40 mb-4 shadow-lg text-center">
+                <div class="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Identitas Siswa</div>
+                <div class="text-sm font-black text-amber-300 tracking-wide mt-0.5">Nama: Rafka Rizan Ramadhan</div>
+                <div class="text-xs font-bold text-sky-300 tracking-wider uppercase mt-0.5">Kelas: XI.E</div>
+            </div>
+
+            <div class="text-6xl mb-2 animate-bounce">🐧</div>
+            <h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-blue-200 to-indigo-400 tracking-wider mb-0.5">PENGUIN</h1>
+            <h2 class="text-xl font-bold text-sky-200 tracking-widest mb-6 uppercase">FROZEN FRENZY</h2>
+
+            <div class="flex flex-col gap-3 w-full mb-6">
+                <button id="btn-main-play" type="button" class="w-full py-4 glass-panel bg-gradient-to-r from-sky-500 to-blue-600 text-white font-black text-lg rounded-2xl btn-action border-sky-300/50 shadow-xl shadow-sky-500/25">MAIN SEKARANG 🚀</button>
+                <button id="btn-area-select" type="button" class="w-full py-3.5 glass-panel text-sky-200 font-bold rounded-2xl btn-action hover:bg-slate-800">PILIH AREA 🗺️</button>
+                <button id="btn-shop" type="button" class="w-full py-3.5 glass-panel text-amber-300 font-bold rounded-2xl btn-action hover:bg-slate-800 flex items-center justify-center gap-2">
+                    <span>🛒 PERMANENT SHOP</span>
+                </button>
+            </div>
+
+            <div class="text-xs text-slate-400 font-mono">Petualangan 2.5D Mr. Karo di Kutub Selatan</div>
+        </div>
+    </div>
+
+    <!-- PAUSE MENU MODAL -->
+    <div id="modal-pause" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50 pointer-events-auto" style="display: none;">
+        <div class="glass-panel p-6 rounded-3xl max-w-xs w-full text-center border-sky-400/40">
+            <div class="text-4xl mb-2">⏸️</div>
+            <h3 class="text-2xl font-black text-sky-300 mb-6">GAME DIJEDA</h3>
+            
+            <div class="flex flex-col gap-3 w-full">
+                <button id="btn-resume" type="button" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold rounded-2xl btn-action">▶️ LANJUTKAN</button>
+                <button id="btn-pause-restart" type="button" class="w-full py-3.5 glass-panel text-sky-200 font-bold rounded-2xl btn-action hover:bg-slate-800">🔄 ULANGI RUN</button>
+                <button id="btn-pause-main" type="button" class="w-full py-3.5 glass-panel text-red-400 font-bold rounded-2xl btn-action hover:bg-slate-800">🏠 MENU UTAMA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AREA SELECT MODAL -->
+    <div id="modal-area" class="absolute inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50 pointer-events-auto" style="display: none;">
+        <div class="max-w-md w-full glass-panel p-6 rounded-3xl border-sky-400/30">
+            <h3 class="text-xl font-black text-sky-300 text-center mb-4">PILIH AREA PETUALANGAN</h3>
+            <div id="area-list" class="flex flex-col gap-3 max-h-[60vh] overflow-y-auto pr-1"></div>
+            <button id="btn-close-area" type="button" class="w-full mt-5 py-3 glass-panel text-slate-300 font-bold rounded-2xl btn-action">KEMBALI</button>
+        </div>
+    </div>
+
+    <!-- PERMANENT SHOP MODAL -->
+    <div id="modal-shop" class="absolute inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50 pointer-events-auto" style="display: none;">
+        <div class="max-w-md w-full glass-panel p-6 rounded-3xl border-amber-400/30">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-black text-amber-400">UPGRADE MR. KARO</h3>
+                <div class="glass-panel px-3 py-1 rounded-xl text-amber-300 font-bold text-sm flex items-center gap-1">
+                    <span>🐟</span> <span id="shop-coin-count">0</span>
+                </div>
+            </div>
+            <div id="shop-items" class="flex flex-col gap-3 max-h-[55vh] overflow-y-auto pr-1"></div>
+            <button id="btn-close-shop" type="button" class="w-full mt-5 py-3 glass-panel text-slate-300 font-bold rounded-2xl btn-action">KEMBALI</button>
+        </div>
+    </div>
+
+    <!-- LEVEL UP / IN-RUN UPGRADE MODAL -->
+    <div id="modal-upgrade" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50 pointer-events-auto" style="display: none;">
+        <div class="text-center max-w-lg w-full">
+            <div class="text-amber-400 font-black tracking-widest text-xs uppercase mb-1">PILIH 1 KEMAMPUAN</div>
+            <h2 class="text-3xl font-black text-white mb-6">LEVEL UP!</h2>
+            <div id="upgrade-cards" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+        </div>
+    </div>
+
+    <!-- ROOM CLEAR / REWARD MODAL -->
+    <div id="modal-room-clear" class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center p-6 z-40 pointer-events-auto" style="display: none;">
+        <div class="glass-panel p-6 rounded-3xl max-w-xs w-full text-center border-emerald-400/40">
+            <div class="text-4xl mb-2">🧊</div>
+            <h3 class="text-2xl font-black text-emerald-400 mb-1">ROOM BERSIH!</h3>
+            <p class="text-xs text-slate-300 mb-4">Mendapatkan bonus pemulihan & koin</p>
+            <div class="space-y-2 mb-6 font-mono text-sm">
+                <div class="glass-panel py-2 rounded-xl text-emerald-300" id="rc-heal">+0 HP</div>
+                <div class="glass-panel py-2 rounded-xl text-amber-300" id="rc-coins">🐟 +0</div>
+                <div class="glass-panel py-2 rounded-xl text-sky-300" id="rc-xp">+0 XP</div>
+            </div>
+            <button id="btn-next-room" type="button" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold rounded-2xl btn-action shadow-lg shadow-emerald-500/20">LANJUT ROOM</button>
+        </div>
+    </div>
+
+    <!-- GAME OVER MODAL -->
+    <div id="modal-gameover" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50 pointer-events-auto" style="display: none;">
+        <div class="glass-panel p-6 rounded-3xl max-w-xs w-full text-center border-red-500/40">
+            <div class="text-5xl mb-2">💔</div>
+            <h3 class="text-2xl font-black text-red-500 mb-1">GAME OVER</h3>
+            <p class="text-xs text-slate-400 mb-4">Mr. Karo kehabisan tenaga...</p>
+            <div class="glass-panel p-3 rounded-2xl space-y-1 mb-6 text-xs text-slate-300 font-mono text-left">
+                <div class="flex justify-between"><span>Area Reached:</span> <span id="go-area" class="text-sky-300">1</span></div>
+                <div class="flex justify-between"><span>Room Reached:</span> <span id="go-room" class="text-sky-300">1</span></div>
+                <div class="flex justify-between"><span>Koin Ditemukan:</span> <span id="go-coins" class="text-amber-300">0</span></div>
+            </div>
+            <div class="flex flex-col gap-2">
+                <button id="btn-retry" type="button" class="w-full py-3.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white font-bold rounded-2xl btn-action">COBA LAGI 🔄</button>
+                <button id="btn-gameover-main" type="button" class="w-full py-3 glass-panel text-slate-300 font-bold rounded-2xl btn-action hover:bg-slate-800">MENU UTAMA 🏠</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VICTORY MODAL -->
+    <div id="modal-victory" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50 pointer-events-auto" style="display: none;">
+        <div class="glass-panel p-6 rounded-3xl max-w-xs w-full text-center border-amber-400/50">
+            <div class="text-5xl mb-2 animate-bounce">👑</div>
+            <h3 class="text-2xl font-black text-amber-400 mb-1">KEMENANGAN MUTLAK!</h3>
+            <p class="text-xs text-slate-300 mb-4">Mr. Karo berhasil menguasai seluruh Kutub!</p>
+            <button id="btn-victory-main" type="button" class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black rounded-2xl btn-action">MENU UTAMA 🏠</button>
+        </div>
+    </div>
+
+    <!-- GAME ENGINE LOGIC SCRIPT -->
+    <script>
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+            init() {
+                try {
+                    if (!this.ctx) {
+                        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                        if (AudioCtx) this.ctx = new AudioCtx();
+                    }
+                    if (this.ctx && this.ctx.state === 'suspended') {
+                        this.ctx.resume().catch(() => {});
+                    }
+                } catch (e) {}
+            }
+            playTone(freq, duration, type = 'sine', vol = 0.1) {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {}
+            }
+            playThrow() { this.playTone(420, 0.08, 'sine', 0.08); }
+            playHit() { this.playTone(180, 0.1, 'triangle', 0.15); }
+            playCrit() { this.playTone(620, 0.15, 'square', 0.12); }
+            playKill() { this.playTone(220, 0.2, 'sawtooth', 0.1); }
+            playDash() { this.playTone(320, 0.12, 'sine', 0.12); }
+            playLevelUp() {
+                this.playTone(300, 0.1, 'sine', 0.1);
+                setTimeout(() => this.playTone(500, 0.2, 'sine', 0.1), 80);
+            }
+            playBossWarning() { this.playTone(110, 0.4, 'sawtooth', 0.22); }
+            playClick() { this.playTone(500, 0.04, 'sine', 0.05); }
+        }
+
+        const audio = new SoundEngine();
+
+        const SAVE_KEY = 'PENGUIN_FROZEN_FRENZY_DATA_V3';
+        let saveData = {
+            version: 3,
+            coins: 0,
+            unlockedArea: 1,
+            upgrades: { hp: 0, dmg: 0, speed: 0, atkSpd: 0, crit: 0, xpGain: 0, coinGain: 0 }
+        };
+
+        function loadSavedData() {
+            try {
+                const raw = localStorage.getItem(SAVE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && typeof parsed === 'object') {
+                        saveData.coins = Number(parsed.coins) || 0;
+                        saveData.unlockedArea = Number(parsed.unlockedArea) || 1;
+                        if (parsed.upgrades && typeof parsed.upgrades === 'object') {
+                            saveData.upgrades.hp = Number(parsed.upgrades.hp) || 0;
+                            saveData.upgrades.dmg = Number(parsed.upgrades.dmg) || 0;
+                            saveData.upgrades.speed = Number(parsed.upgrades.speed) || 0;
+                            saveData.upgrades.atkSpd = Number(parsed.upgrades.atkSpd) || 0;
+                            saveData.upgrades.crit = Number(parsed.upgrades.crit) || 0;
+                            saveData.upgrades.xpGain = Number(parsed.upgrades.xpGain) || 0;
+                            saveData.upgrades.coinGain = Number(parsed.upgrades.coinGain) || 0;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn("Storage restricted", e);
+            }
+        }
+
+        function saveGameData() {
+            try {
+                localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+            } catch (e) {}
+        }
+
+        loadSavedData();
+
+        const AREA_CONFIGS = {
+            1: { name: 'SNOWY SHORE', bg: '#0b1329', floor: '#1e293b', accent: '#38bdf8', enemyPool: ['FOX', 'SEAL'], boss: 'FROSTFANG' },
+            2: { name: 'FROZEN TUNDRA', bg: '#082f49', floor: '#0c4a6e', accent: '#0284c7', enemyPool: ['FOX', 'WOLF', 'SEAL'], boss: 'ARCTIC ALPHA' },
+            3: { name: 'ICE CAVERN', bg: '#172554', floor: '#1e3a8a', accent: '#60a5fa', enemyPool: ['OWL', 'CRAWLER', 'WALRUS'], boss: 'GLACIER GOLEM' },
+            4: { name: 'FROZEN FOREST', bg: '#064e3b', floor: '#065f46', accent: '#34d399', enemyPool: ['WOLF', 'BAT', 'OWL'], boss: 'SNOW OWL KING' },
+            5: { name: 'GLACIER VALLEY', bg: '#311042', floor: '#4a1d6d', accent: '#c084fc', enemyPool: ['WALRUS', 'BEAR', 'GOLEM'], boss: 'MAMMOTH PRIME' },
+            6: { name: 'FROZEN FORTRESS', bg: '#2e1065', floor: '#3b0764', accent: '#e879f9', enemyPool: ['CRAWLER', 'BAT', 'BEAR', 'GOLEM'], boss: 'FROST KING' }
+        };
+
+        const ENEMY_STATS = {
+            FOX: { name: 'Arctic Fox', hp: 45, speed: 2.4, size: 16, xp: 12, color: '#f97316', role: 'CHASER' },
+            SEAL: { name: 'Seal', hp: 80, speed: 1.4, size: 20, xp: 18, color: '#94a3b8', role: 'TANK' },
+            WOLF: { name: 'Arctic Wolf', hp: 95, speed: 2.0, size: 18, xp: 22, color: '#cbd5e1', role: 'CHARGER' },
+            OWL: { name: 'Snow Owl', hp: 55, speed: 1.6, size: 15, xp: 25, color: '#e2e8f0', role: 'RANGED' },
+            CRAWLER: { name: 'Ice Crawler', hp: 65, speed: 2.8, size: 14, xp: 20, color: '#38bdf8', role: 'AMBUSH' },
+            WALRUS: { name: 'Walrus', hp: 170, speed: 1.0, size: 26, xp: 35, color: '#64748b', role: 'HEAVY' },
+            BEAR: { name: 'Polar Bear', hp: 240, speed: 1.2, size: 28, xp: 50, color: '#f8fafc', role: 'SLAMMER' },
+            GOLEM: { name: 'Ice Golem', hp: 350, speed: 0.8, size: 32, xp: 65, color: '#0284c7', role: 'TOWER' },
+            BAT: { name: 'Frost Bat', hp: 48, speed: 3.2, size: 13, xp: 18, color: '#a855f7', role: 'DIVER' }
+        };
+
+        const BOSS_STATS = {
+            'FROSTFANG': { name: 'Frostfang', hp: 950, size: 40, xp: 250, color: '#38bdf8' },
+            'ARCTIC ALPHA': { name: 'Arctic Alpha', hp: 1500, size: 42, xp: 350, color: '#e2e8f0' },
+            'GLACIER GOLEM': { name: 'Glacier Golem', hp: 2200, size: 48, xp: 500, color: '#0284c7' },
+            'SNOW OWL KING': { name: 'Snow Owl King', hp: 2800, size: 44, xp: 650, color: '#f8fafc' },
+            'MAMMOTH PRIME': { name: 'Mammoth Prime', hp: 3800, size: 52, xp: 850, color: '#c084fc' },
+            'FROST KING': { name: 'Frost King', hp: 5500, size: 55, xp: 1300, color: '#e879f9' }
+        };
+
+        const UPGRADES_LIST = [
+            { id: 'FROZEN_FISH', name: 'Frozen Fish', desc: 'Serangan memberikan efek lambat (slow).', rarity: 'COMMON' },
+            { id: 'TWIN_SALMON', name: 'Twin Salmon', desc: 'Melempar proyeksil ikan tambahan.', rarity: 'RARE' },
+            { id: 'HEAVY_TROUT', name: 'Heavy Trout', desc: 'Meningkatkan Damage & Knockback.', rarity: 'COMMON' },
+            { id: 'RAPID_TUNA', name: 'Rapid Tuna', desc: 'Meningkatkan kecepatan melempar.', rarity: 'COMMON' },
+            { id: 'DRILL_MACKEREL', name: 'Drill Mackerel', desc: 'Ikan menembus musuh.', rarity: 'RARE' },
+            { id: 'RICOCHET_COD', name: 'Ricochet Cod', desc: 'Ikan memantul ke musuh sekitar.', rarity: 'EPIC' },
+            { id: 'ICE_BURST', name: 'Ice Burst', desc: 'Musuh mati meledakkan pecahan es.', rarity: 'RARE' },
+            { id: 'BABY_PENGUIN', name: 'Baby Companion', desc: 'Penguin kecil membantu melempar ikan.', rarity: 'EPIC' },
+            { id: 'FROST_SHIELD', name: 'Frost Shield', desc: 'Perisai yang menyerap serangan musuh.', rarity: 'EPIC' },
+            { id: 'HEALTH_REGROWTH', name: 'Health Regrowth', desc: 'Memulihkan HP setiap selesai room.', rarity: 'COMMON' },
+            { id: 'CRITICAL_FISH', name: 'Critical Fish', desc: 'Meningkatkan peluang Critical Hit.', rarity: 'RARE' },
+            { id: 'FROST_NOVA', name: 'Frost Nova', desc: 'Mengeluarkan ledakan es berkala.', rarity: 'LEGENDARY' },
+            { id: 'FISH_MAGNET', name: 'Fish Magnet', desc: 'Memperbesar jangkauan mengambil XP & Koin.', rarity: 'COMMON' },
+            { id: 'ICE_ARMOR', name: 'Ice Armor', desc: 'Mengurangi damage yang diterima Mr. Karo.', rarity: 'RARE' }
+        ];
+
+        let canvas, ctx, minimapCanvas, minimapCtx;
+        let camera = { x: 0, y: 0, shake: 0 };
+        let currentArea = 1;
+        let currentRoom = 1;
+        let currentRoomType = 'NORMAL ROOM';
+        let isGameRunning = false;
+        let isPaused = false;
+        let lastTime = 0;
+        let pendingLevelUps = 0;
+
+        let player = null;
+        let enemies = [];
+        let projectiles = [];
+        let particles = [];
+        let floatingTexts = [];
+        let roomDecorations = [];
+        let crackedIceTiles = [];
+        let menuSnowParticles = [];
+        let activeBoss = null;
+
+        // Joystick & Dash State
+        let joystickActive = false;
+        let joystickVector = { x: 0, y: 0 };
+        const keys = {};
+
+        // Helper UI display handlers
+        function showElement(id, displayStyle = 'flex') {
+            const el = document.getElementById(id);
+            if (el) el.style.display = displayStyle;
+        }
+
+        function hideElement(id) {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        }
+
+        class Player {
+            constructor() {
+                this.x = 0;
+                this.y = 0;
+                this.radius = 18;
+                this.level = 1;
+                this.xp = 0;
+                this.xpToNextLevel = 50;
+
+                const u = saveData.upgrades || {};
+                const pHp = (u.hp || 0) * 15;
+                const pDmg = (u.dmg || 0) * 5;
+                const pSpd = (u.speed || 0) * 0.3;
+                const pAtkSpd = (u.atkSpd || 0) * 0.08;
+                const pCrit = (u.crit || 0) * 0.03;
+
+                this.maxHp = 100 + pHp;
+                this.hp = this.maxHp;
+                this.speed = 3.4 + pSpd;
+                this.damage = 25 + pDmg;
+                this.attackCooldown = Math.max(0.2, 0.55 - pAtkSpd);
+                this.attackTimer = 0;
+                this.critChance = 0.20 + pCrit;
+                this.damageReduction = 0;
+                this.pickupRadius = 80;
+
+                this.upgrades = {};
+
+                // Damage Cooldown (i-Frames)
+                this.iFrameDuration = 0.6;
+                this.iFrameTimer = 0;
+
+                // Dash Ability
+                this.dashCooldown = 2.5;
+                this.dashTimer = 0;
+                this.isDashing = false;
+                this.dashDuration = 0.22;
+                this.dashTimeLeft = 0;
+                this.dashDirection = { x: 0, y: -1 };
+
+                // Special Upgrade States
+                this.shieldActive = false;
+                this.shieldCooldown = 0;
+                this.petTimer = 0;
+                this.petX = 0;
+                this.petY = 0;
+                this.novaTimer = 0;
+
+                this.squashX = 1;
+                this.squashY = 1;
+            }
+
+            performDash() {
+                if (this.dashTimer > 0 || this.isDashing) return;
+                this.isDashing = true;
+                this.dashTimeLeft = this.dashDuration;
+                this.dashTimer = this.dashCooldown;
+                audio.playDash();
+                addCameraShake(3);
+
+                for (let i = 0; i < 12; i++) {
+                    particles.push({
+                        x: this.x, y: this.y,
+                        vx: (Math.random() - 0.5) * 4,
+                        vy: (Math.random() - 0.5) * 4,
+                        color: '#a5f3fc',
+                        size: 4 + Math.random() * 4,
+                        life: 0.3
+                    });
+                }
+            }
+
+            update(dt) {
+                // i-Frame timer
+                if (this.iFrameTimer > 0) {
+                    this.iFrameTimer -= dt;
+                    if (this.iFrameTimer < 0) this.iFrameTimer = 0;
+                }
+
+                // Dash cooldown logic
+                if (this.dashTimer > 0) {
+                    this.dashTimer -= dt;
+                    if (this.dashTimer < 0) this.dashTimer = 0;
+                    const cdBar = document.getElementById('dash-cd-bar');
+                    if (cdBar) cdBar.style.width = `${((this.dashCooldown - this.dashTimer) / this.dashCooldown) * 100}%`;
+                }
+
+                let moveX = 0;
+                let moveY = 0;
+
+                if (keys['KeyW'] || keys['ArrowUp']) moveY -= 1;
+                if (keys['KeyS'] || keys['ArrowDown']) moveY += 1;
+                if (keys['KeyA'] || keys['ArrowLeft']) moveX -= 1;
+                if (keys['KeyD'] || keys['ArrowRight']) moveX += 1;
+
+                if (keys['Space']) {
+                    this.performDash();
+                }
+
+                if (joystickActive) {
+                    moveX = joystickVector.x;
+                    moveY = joystickVector.y;
+                }
+
+                const len = Math.hypot(moveX, moveY);
+                if (len > 0) {
+                    const normX = moveX / (len > 1 ? len : 1);
+                    const normY = moveY / (len > 1 ? len : 1);
+                    this.dashDirection = { x: normX, y: normY };
+
+                    const currentSpeed = this.isDashing ? this.speed * 2.8 : this.speed;
+                    this.x += normX * currentSpeed * dt * 60;
+                    this.y += normY * currentSpeed * dt * 60;
+
+                    this.squashX = 1 + Math.sin(Date.now() * 0.015) * 0.1;
+                    this.squashY = 1 - Math.sin(Date.now() * 0.015) * 0.1;
+                } else {
+                    if (this.isDashing) {
+                        this.x += this.dashDirection.x * this.speed * 2.8 * dt * 60;
+                        this.y += this.dashDirection.y * this.speed * 2.8 * dt * 60;
+                    }
+                    this.squashX = 1;
+                    this.squashY = 1;
+                }
+
+                if (this.isDashing) {
+                    this.dashTimeLeft -= dt;
+                    if (this.dashTimeLeft <= 0) {
+                        this.isDashing = false;
+                    }
+                }
+
+                // Ice Break Tile Interaction
+                if (currentRoomType === 'ICE BREAK') {
+                    crackedIceTiles.forEach(tile => {
+                        const dist = Math.hypot(tile.x - this.x, tile.y - this.y);
+                        if (dist < tile.radius) {
+                            tile.standTimer += dt;
+                            if (tile.standTimer >= 0.8 && !tile.broken) {
+                                tile.broken = true;
+                                spawnParticles(tile.x, tile.y, '#38bdf8', 15);
+                                audio.playHit();
+                            }
+                            if (tile.broken && this.iFrameTimer <= 0) {
+                                this.takeDamage(4);
+                                spawnFloatingText(this.x, this.y - 20, 'ES PECAH!', '#38bdf8', false);
+                            }
+                        } else {
+                            tile.standTimer = Math.max(0, tile.standTimer - dt);
+                        }
+                    });
+                }
+
+                // Auto Attack
+                this.attackTimer -= dt;
+                if (this.attackTimer <= 0) {
+                    this.autoAttack();
+                    this.attackTimer = this.attackCooldown;
+                }
+
+                // Frost Shield Recharge
+                const shieldLvl = this.upgrades['FROST_SHIELD'] || 0;
+                if (shieldLvl > 0 && !this.shieldActive) {
+                    this.shieldCooldown -= dt;
+                    if (this.shieldCooldown <= 0) {
+                        this.shieldActive = true;
+                        spawnFloatingText(this.x, this.y - 30, 'PERISAI SIAP!', '#38bdf8', false);
+                    }
+                }
+
+                // Baby Penguin Companion Logic
+                const petLvl = this.upgrades['BABY_PENGUIN'] || 0;
+                if (petLvl > 0) {
+                    this.petX += (this.x - 30 - this.petX) * 0.1;
+                    this.petY += (this.y - 15 - this.petY) * 0.1;
+                    this.petTimer -= dt;
+
+                    const interval = petLvl === 1 ? 1.5 : (petLvl === 2 ? 0.9 : 0.7);
+                    if (this.petTimer <= 0) {
+                        this.petTimer = interval;
+                        const target = findNearestEnemy(this.petX, this.petY);
+                        if (target) {
+                            const angle = Math.atan2(target.y - this.petY, target.x - this.petX);
+                            projectiles.push(new FishProjectile(this.petX, this.petY, angle, this.damage * 0.5, true));
+                        }
+                    }
+                }
+
+                // Frost Nova
+                const novaLvl = this.upgrades['FROST_NOVA'] || 0;
+                if (novaLvl > 0) {
+                    this.novaTimer += dt;
+                    if (this.novaTimer >= 4.0) {
+                        this.novaTimer = 0;
+                        this.triggerFrostNova(novaLvl);
+                    }
+                }
+            }
+
+            triggerFrostNova(lvl) {
+                const radius = 120 + lvl * 30;
+                audio.playHit();
+                addCameraShake(3);
+                spawnParticles(this.x, this.y, '#38bdf8', 30);
+                enemies.forEach(e => {
+                    if (Math.hypot(e.x - this.x, e.y - this.y) <= radius) {
+                        e.takeDamage(this.damage * (0.8 + lvl * 0.2), false);
+                        e.applySlow(0.5, 3.0);
+                    }
+                });
+            }
+
+            autoAttack() {
+                const target = findNearestEnemy(this.x, this.y);
+                if (!target) return;
+
+                const angle = Math.atan2(target.y - this.y, target.x - this.x);
+                audio.playThrow();
+
+                const twinLvl = this.upgrades['TWIN_SALMON'] || 0;
+                const count = 1 + twinLvl;
+                const spread = 0.18;
+
+                for (let i = 0; i < count; i++) {
+                    const offset = (i - (count - 1) / 2) * spread;
+                    projectiles.push(new FishProjectile(this.x, this.y, angle + offset, this.damage));
+                }
+            }
+
+            takeDamage(amt) {
+                if (this.isDashing || this.iFrameTimer > 0) return; // Invulnerable window
+
+                if (this.shieldActive) {
+                    this.shieldActive = false;
+                    const shieldLvl = this.upgrades['FROST_SHIELD'] || 1;
+                    this.shieldCooldown = shieldLvl === 1 ? 15 : (shieldLvl === 2 ? 10 : 6);
+                    this.iFrameTimer = 0.4;
+                    spawnParticles(this.x, this.y, '#38bdf8', 20);
+                    spawnFloatingText(this.x, this.y - 30, 'BLOCKED!', '#38bdf8', true);
+                    return;
+                }
+
+                const armorLvl = this.upgrades['ICE_ARMOR'] || 0;
+                const armorRed = armorLvl * 0.1;
+                const actualDamage = Math.max(1, amt * (1 - (this.damageReduction + armorRed)));
+                this.hp -= actualDamage;
+                this.iFrameTimer = this.iFrameDuration; // Apply i-frame duration
+
+                audio.playHit();
+                addCameraShake(4);
+                spawnParticles(this.x, this.y, '#ef4444', 12);
+                spawnFloatingText(this.x, this.y - 25, `-${Math.round(actualDamage)}`, '#ef4444');
+
+                updateHUD();
+
+                if (this.hp <= 0) {
+                    this.hp = 0;
+                    triggerGameOver();
+                }
+            }
+
+            addXP(amount) {
+                const bonus = (saveData.upgrades && saveData.upgrades.xpGain) ? saveData.upgrades.xpGain : 0;
+                const gainBonus = 1 + (bonus * 0.1);
+                const actualXP = amount * gainBonus;
+                this.xp += actualXP;
+                spawnFloatingText(this.x, this.y - 20, `+${Math.round(actualXP)} XP`, '#f59e0b');
+
+                while (this.xp >= this.xpToNextLevel) {
+                    this.xp -= this.xpToNextLevel;
+                    this.level++;
+                    this.xpToNextLevel = Math.round(this.xpToNextLevel * 1.35);
+                    pendingLevelUps++;
+                    audio.playLevelUp();
+                    spawnParticles(this.x, this.y, '#f59e0b', 30);
+                }
+                
+                updateHUD();
+
+                if (pendingLevelUps > 0 && !isPaused) {
+                    processPendingLevelUps();
+                }
+            }
+
+            draw() {
+                // Flickering effect during invulnerability i-frames
+                if (this.iFrameTimer > 0 && Math.floor(Date.now() / 60) % 2 === 0) {
+                    return;
+                }
+
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                // Oval Shadow
+                ctx.beginPath();
+                ctx.ellipse(0, 16, 18, 8, 0, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.fill();
+
+                if (this.shieldActive) {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 26 + Math.sin(Date.now() * 0.008) * 3, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                    ctx.fillStyle = 'rgba(56, 189, 248, 0.15)';
+                    ctx.fill();
+                }
+
+                ctx.scale(this.squashX || 1, this.squashY || 1);
+
+                // Body
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 16, 18, 0, 0, Math.PI * 2);
+                ctx.fillStyle = '#0f172a';
+                ctx.fill();
+
+                // Belly
+                ctx.beginPath();
+                ctx.ellipse(0, 3, 11, 13, 0, 0, Math.PI * 2);
+                ctx.fillStyle = '#f8fafc';
+                ctx.fill();
+
+                // Eyes
+                ctx.fillStyle = '#0f172a';
+                ctx.beginPath(); ctx.arc(-5, -5, 2.5, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(5, -5, 2.5, 0, Math.PI * 2); ctx.fill();
+
+                // Beak
+                ctx.fillStyle = '#f97316';
+                ctx.beginPath();
+                ctx.moveTo(-4, -1); ctx.lineTo(4, -1); ctx.lineTo(0, 5);
+                ctx.closePath();
+                ctx.fill();
+
+                // Feet
+                ctx.fillStyle = '#ea580c';
+                ctx.beginPath(); ctx.arc(-7, 16, 4, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(7, 16, 4, 0, Math.PI * 2); ctx.fill();
+
+                ctx.restore();
+
+                // Render Baby Penguin
+                if (this.upgrades['BABY_PENGUIN'] > 0) {
+                    ctx.save();
+                    ctx.translate(this.petX, this.petY);
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 9, 0, Math.PI * 2);
+                    ctx.fillStyle = '#38bdf8';
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(0, 1, 6, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+        }
+
+        class FishProjectile {
+            constructor(x, y, angle, baseDamage, isPet = false) {
+                this.x = x;
+                this.y = y;
+                this.angle = angle;
+                this.speed = 8.5;
+                this.radius = isPet ? 6 : 9;
+                this.isPet = isPet;
+
+                const heavyLvl = (player ? player.upgrades['HEAVY_TROUT'] : 0) || 0;
+                this.damage = baseDamage + (heavyLvl * 10);
+                this.knockback = 4 + heavyLvl * 3;
+
+                this.pierceLeft = (player ? player.upgrades['DRILL_MACKEREL'] : 0) || 0;
+
+                this.hitEnemies = new Set();
+                this.dead = false;
+            }
+
+            update(dt) {
+                this.x += Math.cos(this.angle) * this.speed * dt * 60;
+                this.y += Math.sin(this.angle) * this.speed * dt * 60;
+
+                if (Math.random() < 0.4) {
+                    particles.push({
+                        x: this.x, y: this.y,
+                        vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5,
+                        size: 2, color: '#a5f3fc', life: 0.2
+                    });
+                }
+
+                const px = player ? player.x : 0;
+                const py = player ? player.y : 0;
+                if (Math.abs(this.x - px) > 600 || Math.abs(this.y - py) > 600) {
+                    this.dead = true;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+
+                ctx.fillStyle = this.isPet ? '#93c5fd' : '#38bdf8';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, this.radius * 1.5, this.radius * 0.8, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(-this.radius * 1.2, 0);
+                ctx.lineTo(-this.radius * 2, -this.radius * 0.6);
+                ctx.lineTo(-this.radius * 2, this.radius * 0.6);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        class Enemy {
+            constructor(typeKey, isElite = false) {
+                const config = ENEMY_STATS[typeKey] || ENEMY_STATS['FOX'];
+                this.typeKey = typeKey;
+                this.name = config.name;
+                this.role = config.role || 'CHASER';
+                this.isElite = isElite;
+
+                const areaMult = 1 + (currentArea - 1) * 0.4;
+                this.maxHp = config.hp * areaMult * (isElite ? 2.5 : 1);
+                this.hp = this.maxHp;
+                this.speed = config.speed * (isElite ? 1.15 : 1);
+                this.size = config.size * (isElite ? 1.3 : 1);
+                this.xp = config.xp * (isElite ? 2.5 : 1);
+                this.color = config.color;
+
+                this.x = 0;
+                this.y = 0;
+                this.slowFactor = 1;
+                this.slowTimer = 0;
+                this.dead = false;
+
+                // Telegraph charge
+                this.telegraphTimer = 0;
+                this.isTelegraphing = false;
+                this.chargeAngle = 0;
+            }
+
+            applySlow(factor, duration) {
+                this.slowFactor = Math.min(this.slowFactor, factor);
+                this.slowTimer = duration;
+            }
+
+            takeDamage(amount, canCrit = true) {
+                let finalDamage = amount;
+                let isCrit = false;
+
+                const critBonus = (player ? player.upgrades['CRITICAL_FISH'] : 0) * 0.05;
+                const totalCrit = (player ? player.critChance : 0.2) + critBonus;
+
+                if (canCrit && Math.random() < totalCrit) {
+                    isCrit = true;
+                    finalDamage *= 1.5;
+                }
+
+                this.hp -= finalDamage;
+
+                if (isCrit) {
+                    audio.playCrit();
+                    spawnFloatingText(this.x, this.y - 25, `${Math.round(finalDamage)}!`, '#f59e0b', true);
+                    spawnParticles(this.x, this.y, '#f59e0b', 12);
+                } else {
+                    audio.playHit();
+                    spawnFloatingText(this.x, this.y - 20, `${Math.round(finalDamage)}`, '#ffffff');
+                    spawnParticles(this.x, this.y, '#bae6fd', 6);
+                }
+
+                if (this.hp <= 0 && !this.dead) {
+                    this.dead = true;
+                    audio.playKill();
+                    if (player) player.addXP(this.xp);
+
+                    const bonus = (saveData.upgrades && saveData.upgrades.coinGain) ? saveData.upgrades.coinGain : 0;
+                    const coinBonus = 1 + (bonus * 0.15);
+                    const baseCoins = this.isElite ? Math.floor(Math.random() * 5) + 5 : Math.floor(Math.random() * 3) + 1;
+                    const finalCoins = Math.round(baseCoins * coinBonus);
+                    saveData.coins += finalCoins;
+
+                    spawnParticles(this.x, this.y, '#f59e0b', 16);
+
+                    const burstLvl = (player ? player.upgrades['ICE_BURST'] : 0) || 0;
+                    if (burstLvl > 0) {
+                        const shards = burstLvl * 3;
+                        for (let i = 0; i < shards; i++) {
+                            const a = (Math.PI * 2 / shards) * i;
+                            projectiles.push(new FishProjectile(this.x, this.y, a, (player ? player.damage : 25) * 0.4, true));
+                        }
+                    }
+                }
+            }
+
+            update(dt) {
+                if (this.slowTimer > 0) {
+                    this.slowTimer -= dt;
+                    if (this.slowTimer <= 0) this.slowFactor = 1;
+                }
+
+                if (!player) return;
+
+                const effSpeed = this.speed * this.slowFactor;
+                const angle = Math.atan2(player.y - this.y, player.x - this.x);
+
+                if (this.role === 'CHARGER') {
+                    if (!this.isTelegraphing && Math.hypot(player.x - this.x, player.y - this.y) < 180 && Math.random() < 0.02) {
+                        this.isTelegraphing = true;
+                        this.telegraphTimer = 0.8;
+                        this.chargeAngle = angle;
+                    }
+
+                    if (this.isTelegraphing) {
+                        this.telegraphTimer -= dt;
+                        if (this.telegraphTimer <= 0) {
+                            this.isTelegraphing = false;
+                            this.x += Math.cos(this.chargeAngle) * effSpeed * 3.5 * dt * 60;
+                            this.y += Math.sin(this.chargeAngle) * effSpeed * 3.5 * dt * 60;
+                        }
+                    } else {
+                        this.x += Math.cos(angle) * effSpeed * dt * 60;
+                        this.y += Math.sin(angle) * effSpeed * dt * 60;
+                    }
+                } else {
+                    this.x += Math.cos(angle) * effSpeed * dt * 60;
+                    this.y += Math.sin(angle) * effSpeed * dt * 60;
+                }
+
+                const dist = Math.hypot(player.x - this.x, player.y - this.y);
+                if (dist < this.size + player.radius) {
+                    player.takeDamage(12 * (1 + currentArea * 0.2));
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                // Telegraph Red Cone
+                if (this.isTelegraphing) {
+                    ctx.save();
+                    ctx.rotate(this.chargeAngle);
+                    ctx.fillStyle = 'rgba(239, 68, 68, 0.35)';
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.arc(0, 0, 160, -0.2, 0.2);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                ctx.beginPath();
+                ctx.ellipse(0, this.size * 0.7, this.size, this.size * 0.4, 0, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0,0,0,0.25)';
+                ctx.fill();
+
+                if (this.isElite) {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.size + 6, 0, Math.PI * 2);
+                    ctx.strokeStyle = '#f59e0b';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+
+                ctx.beginPath();
+                ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+
+                ctx.fillStyle = '#0f172a';
+                ctx.beginPath(); ctx.arc(-this.size * 0.3, -this.size * 0.2, 3, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(this.size * 0.3, -this.size * 0.2, 3, 0, Math.PI * 2); ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        class BossEnemy {
+            constructor(bossKey) {
+                const config = BOSS_STATS[bossKey] || BOSS_STATS['FROSTFANG'];
+                this.key = bossKey;
+                this.name = config.name;
+                this.maxHp = config.hp * (1 + (currentArea - 1) * 0.5);
+                this.hp = this.maxHp;
+                this.size = config.size;
+                this.xp = config.xp;
+                this.color = config.color;
+
+                this.x = 0;
+                this.y = -250;
+                this.speed = 1.3;
+                this.phase = 1;
+                this.dead = false;
+            }
+
+            takeDamage(amount) {
+                this.hp -= amount;
+                audio.playHit();
+                spawnFloatingText(this.x, this.y - 40, `${Math.round(amount)}`, '#f43f5e', true);
+
+                if (this.hp <= this.maxHp * 0.6 && this.phase === 1) {
+                    this.phase = 2;
+                    this.speed *= 1.25;
+                    audio.playBossWarning();
+                    const tag = document.getElementById('boss-phase-tag');
+                    if (tag) tag.innerText = 'PHASE 2';
+                } else if (this.hp <= this.maxHp * 0.3 && this.phase === 2) {
+                    this.phase = 3;
+                    this.speed *= 1.3;
+                    audio.playBossWarning();
+                    const tag = document.getElementById('boss-phase-tag');
+                    if (tag) tag.innerText = 'PHASE 3 (ENRAGED)';
+                }
+
+                updateBossHUD();
+
+                if (this.hp <= 0 && !this.dead) {
+                    this.dead = true;
+                    audio.playKill();
+                    if (player) player.addXP(this.xp);
+                    saveData.coins += 50 * currentArea;
+                    addCameraShake(10);
+                }
+            }
+
+            update(dt) {
+                if (!player) return;
+                const angle = Math.atan2(player.y - this.y, player.x - this.x);
+                this.x += Math.cos(angle) * this.speed * dt * 60;
+                this.y += Math.sin(angle) * this.speed * dt * 60;
+
+                const dist = Math.hypot(player.x - this.x, player.y - this.y);
+                if (dist < this.size + player.radius) {
+                    player.takeDamage(25 * (this.phase === 3 ? 1.5 : 1));
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                ctx.beginPath();
+                ctx.ellipse(0, this.size * 0.8, this.size * 1.1, this.size * 0.4, 0, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0,0,0,0.35)';
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        function initGame() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            minimapCanvas = document.getElementById('minimapCanvas');
+            minimapCtx = minimapCanvas.getContext('2d');
+
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            for (let i = 0; i < 40; i++) {
+                menuSnowParticles.push({
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight,
+                    r: 1.5 + Math.random() * 2.5,
+                    speed: 0.5 + Math.random() * 1.5
+                });
+            }
+
+            setupControls();
+            setupUIEvents();
+
+            exitToMainMenu();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function resizeCanvas() {
+            if (!canvas) return;
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function startNewRun(areaNum = 1) {
+            currentArea = areaNum;
+            currentRoom = 1;
+            pendingLevelUps = 0;
+            player = new Player();
+            enemies = [];
+            projectiles = [];
+            particles = [];
+            floatingTexts = [];
+            activeBoss = null;
+
+            isGameRunning = true;
+            isPaused = false;
+
+            hideAllModals();
+            showElement('hud-top', 'flex');
+            showElement('joystick-zone', 'flex');
+            showElement('dash-zone', 'flex');
+
+            spawnRoomEnemies();
+            updateHUD();
+        }
+
+        function exitToMainMenu() {
+            isGameRunning = false;
+            isPaused = false;
+            pendingLevelUps = 0;
+            player = null;
+            enemies = [];
+            projectiles = [];
+            particles = [];
+            floatingTexts = [];
+            activeBoss = null;
+
+            hideAllModals();
+            hideElement('hud-top');
+            hideElement('joystick-zone');
+            hideElement('dash-zone');
+            hideElement('boss-hp-container');
+
+            showElement('modal-menu', 'flex');
+        }
+
+        function spawnRoomEnemies() {
+            enemies = [];
+            activeBoss = null;
+            roomDecorations = [];
+            crackedIceTiles = [];
+            const areaCfg = AREA_CONFIGS[currentArea] || AREA_CONFIGS[1];
+
+            hideElement('boss-hp-container');
+
+            // Select random room type
+            const types = ['NORMAL ROOM', 'FISH RUSH', 'BLIZZARD', 'ICE BREAK'];
+            currentRoomType = types[Math.floor(Math.random() * types.length)];
+            const tag = document.getElementById('room-type-tag');
+            if (tag) tag.innerText = currentRoomType;
+
+            // Generate procedural room decorations
+            for (let i = 0; i < 12; i++) {
+                roomDecorations.push({
+                    x: (Math.random() - 0.5) * 800,
+                    y: (Math.random() - 0.5) * 800,
+                    size: 10 + Math.random() * 20,
+                    type: Math.random() < 0.5 ? 'ROCK' : 'ICE_CRYSTAL'
+                });
+            }
+
+            if (currentRoomType === 'ICE BREAK') {
+                for (let i = 0; i < 6; i++) {
+                    crackedIceTiles.push({
+                        x: (Math.random() - 0.5) * 500,
+                        y: (Math.random() - 0.5) * 500,
+                        radius: 35 + Math.random() * 20,
+                        standTimer: 0,
+                        broken: false
+                    });
+                }
+            }
+
+            if (currentRoom === 5) {
+                activeBoss = new BossEnemy(areaCfg.boss);
+                showElement('boss-hp-container', 'block');
+                updateBossHUD();
+            } else {
+                const count = (currentRoomType === 'FISH RUSH' ? 6 : 3) + currentRoom + currentArea;
+                for (let i = 0; i < count; i++) {
+                    const pool = areaCfg.enemyPool;
+                    const type = pool[Math.floor(Math.random() * pool.length)];
+                    const isElite = Math.random() < 0.15;
+                    const e = new Enemy(type, isElite);
+
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = 250 + Math.random() * 200;
+                    const px = player ? player.x : 0;
+                    const py = player ? player.y : 0;
+                    e.x = px + Math.cos(angle) * dist;
+                    e.y = py + Math.sin(angle) * dist;
+
+                    enemies.push(e);
+                }
+            }
+        }
+
+        function findNearestEnemy(x, y) {
+            let nearest = null;
+            let minDist = Infinity;
+
+            if (activeBoss && !activeBoss.dead) {
+                return activeBoss;
+            }
+
+            enemies.forEach(e => {
+                if (!e.dead) {
+                    const d = Math.hypot(e.x - x, e.y - y);
+                    if (d < minDist) {
+                        minDist = d;
+                        nearest = e;
+                    }
+                }
+            });
+            return nearest;
+        }
+
+        function addCameraShake(amt) {
+            camera.shake = Math.max(camera.shake, amt);
+        }
+
+        function spawnParticles(x, y, color, count = 8) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x, y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    color,
+                    size: 3 + Math.random() * 3,
+                    life: 0.4 + Math.random() * 0.3
+                });
+            }
+        }
+
+        function spawnFloatingText(x, y, text, color = '#ffffff', isBig = false) {
+            floatingTexts.push({
+                x, y, text, color, isBig,
+                vy: -1.2,
+                alpha: 1.0,
+                life: 0.8
+            });
+        }
+
+        function processPendingLevelUps() {
+            if (pendingLevelUps > 0) {
+                triggerLevelUpModal();
+            }
+        }
+
+        function checkRoomCompletion() {
+            if (!isGameRunning || isPaused || pendingLevelUps > 0) return;
+
+            const bossDead = activeBoss ? activeBoss.dead : true;
+            const enemiesDead = enemies.every(e => e.dead);
+
+            if (bossDead && enemiesDead) {
+                isPaused = true;
+
+                const regrowthLvl = player ? (player.upgrades['HEALTH_REGROWTH'] || 0) : 0;
+                let healAmt = 0;
+                if (regrowthLvl > 0 && player) {
+                    const pct = regrowthLvl * 0.05;
+                    healAmt = Math.round(player.maxHp * pct);
+                    player.hp = Math.min(player.maxHp, player.hp + healAmt);
+                }
+
+                const bonusCoins = 10 + currentRoom * 2;
+                const bonusXP = 20 + currentRoom * 5;
+
+                saveData.coins += bonusCoins;
+                if (player) player.addXP(bonusXP);
+                saveGameData();
+
+                document.getElementById('rc-heal').innerText = `+${healAmt} HP`;
+                document.getElementById('rc-coins').innerText = `🐟 +${bonusCoins}`;
+                document.getElementById('rc-xp').innerText = `+${bonusXP} XP`;
+                showElement('modal-room-clear', 'flex');
+            }
+        }
+
+        function gameLoop(timestamp) {
+            const dt = Math.min(0.05, (timestamp - lastTime) / 1000 || 0.016);
+            lastTime = timestamp;
+
+            if (isGameRunning && !isPaused && player) {
+                player.update(dt);
+
+                camera.x += (player.x - camera.x) * 0.1;
+                camera.y += (player.y - camera.y) * 0.1;
+
+                if (camera.shake > 0) {
+                    camera.shake -= dt * 15;
+                    if (camera.shake < 0) camera.shake = 0;
+                }
+
+                projectiles.forEach(p => p.update(dt));
+                projectiles = projectiles.filter(p => !p.dead);
+
+                projectiles.forEach(p => {
+                    const targets = activeBoss ? [activeBoss] : enemies;
+                    targets.forEach(e => {
+                        if (!e.dead && !p.hitEnemies.has(e)) {
+                            const dist = Math.hypot(e.x - p.x, e.y - p.y);
+                            if (dist < e.size + p.radius) {
+                                p.hitEnemies.add(e);
+                                e.takeDamage(p.damage);
+
+                                const frozenLvl = player ? (player.upgrades['FROZEN_FISH'] || 0) : 0;
+                                if (frozenLvl > 0) {
+                                    e.applySlow(1 - (0.15 + frozenLvl * 0.1), 2.0);
+                                }
+
+                                if (p.pierceLeft > 0) {
+                                    p.pierceLeft--;
+                                } else {
+                                    p.dead = true;
+                                }
+                            }
+                        }
+                    });
+                });
+
+                if (activeBoss && !activeBoss.dead) activeBoss.update(dt);
+                enemies.forEach(e => {
+                    if (!e.dead) e.update(dt);
+                });
+
+                particles.forEach(pt => {
+                    pt.x += pt.vx;
+                    pt.y += pt.vy;
+                    pt.life -= dt;
+                });
+                particles = particles.filter(pt => pt.life > 0);
+
+                floatingTexts.forEach(ft => {
+                    ft.y += ft.vy;
+                    ft.life -= dt;
+                    ft.alpha = Math.max(0, ft.life / 0.8);
+                });
+                floatingTexts = floatingTexts.filter(ft => ft.life > 0);
+
+                checkRoomCompletion();
+            }
+
+            render(dt);
+            renderMinimap();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function render(dt) {
+            if (!ctx) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const areaCfg = AREA_CONFIGS[currentArea] || AREA_CONFIGS[1];
+            const px = player ? player.x : camera.x;
+            const py = player ? player.y : camera.y;
+
+            ctx.save();
+            const shakeX = (Math.random() - 0.5) * camera.shake * 4;
+            const shakeY = (Math.random() - 0.5) * camera.shake * 4;
+            ctx.translate(canvas.width / 2 - camera.x + shakeX, canvas.height / 2 - camera.y + shakeY);
+
+            ctx.fillStyle = areaCfg.floor;
+            ctx.fillRect(px - 1000, py - 1000, 2000, 2000);
+
+            ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+            ctx.lineWidth = 2;
+            const gridSize = 80;
+            const startX = Math.floor((px - 1000) / gridSize) * gridSize;
+            const startY = Math.floor((py - 1000) / gridSize) * gridSize;
+
+            for (let x = startX; x < px + 1000; x += gridSize) {
+                ctx.beginPath(); ctx.moveTo(x, py - 1000); ctx.lineTo(x, py + 1000); ctx.stroke();
+            }
+            for (let y = startY; y < py + 1000; y += gridSize) {
+                ctx.beginPath(); ctx.moveTo(px - 1000, y); ctx.lineTo(px + 1000, y); ctx.stroke();
+            }
+
+            // Draw cracked ice tiles
+            if (currentRoomType === 'ICE BREAK') {
+                crackedIceTiles.forEach(tile => {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(tile.x, tile.y, tile.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = tile.broken ? 'rgba(14, 165, 233, 0.45)' : 'rgba(186, 230, 253, 0.25)';
+                    ctx.fill();
+                    ctx.strokeStyle = '#0284c7';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                    ctx.restore();
+                });
+            }
+
+            // Draw decorations
+            roomDecorations.forEach(d => {
+                ctx.fillStyle = d.type === 'ROCK' ? '#334155' : '#38bdf8';
+                ctx.beginPath();
+                ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            if (isGameRunning && player) {
+                enemies.forEach(e => { if (!e.dead) e.draw(); });
+                if (activeBoss && !activeBoss.dead) activeBoss.draw();
+                projectiles.forEach(p => p.draw());
+                player.draw();
+
+                particles.forEach(pt => {
+                    ctx.beginPath();
+                    ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+                    ctx.fillStyle = pt.color;
+                    ctx.fill();
+                });
+
+                floatingTexts.forEach(ft => {
+                    ctx.save();
+                    ctx.globalAlpha = ft.alpha;
+                    ctx.font = ft.isBig ? '900 18px system-ui' : '700 13px system-ui';
+                    ctx.fillStyle = ft.color;
+                    ctx.textAlign = 'center';
+                    ctx.fillText(ft.text, ft.x, ft.y);
+                    ctx.restore();
+                });
+
+                if (currentRoomType === 'BLIZZARD') {
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(224, 242, 254, 0.08)';
+                    ctx.fillRect(px - 1000, py - 1000, 2000, 2000);
+                    ctx.restore();
+                }
+            } else {
+                ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                menuSnowParticles.forEach(p => {
+                    p.y += p.speed;
+                    if (p.y > window.innerHeight) p.y = 0;
+                    ctx.beginPath();
+                    ctx.arc(p.x - canvas.width / 2, p.y - canvas.height / 2, p.r, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+
+            ctx.restore();
+        }
+
+        function renderMinimap() {
+            if (!minimapCtx || !isGameRunning || !player) return;
+            minimapCtx.clearRect(0, 0, 95, 95);
+
+            minimapCtx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+            minimapCtx.fillRect(0, 0, 95, 95);
+
+            const scale = 0.12;
+            const cx = 47.5;
+            const cy = 47.5;
+
+            minimapCtx.beginPath();
+            minimapCtx.arc(cx, cy, 3, 0, Math.PI * 2);
+            minimapCtx.fillStyle = '#38bdf8';
+            minimapCtx.fill();
+
+            enemies.forEach(e => {
+                if (!e.dead) {
+                    const mx = cx + (e.x - player.x) * scale;
+                    const my = cy + (e.y - player.y) * scale;
+                    if (mx >= 0 && mx <= 95 && my >= 0 && my <= 95) {
+                        minimapCtx.beginPath();
+                        minimapCtx.arc(mx, my, e.isElite ? 3.5 : 2, 0, Math.PI * 2);
+                        minimapCtx.fillStyle = e.isElite ? '#f59e0b' : '#ef4444';
+                        minimapCtx.fill();
+                    }
+                }
+            });
+
+            if (activeBoss && !activeBoss.dead) {
+                const bx = cx + (activeBoss.x - player.x) * scale;
+                const by = cy + (activeBoss.y - player.y) * scale;
+                minimapCtx.beginPath();
+                minimapCtx.arc(Math.max(5, Math.min(90, bx)), Math.max(5, Math.min(90, by)), 5, 0, Math.PI * 2);
+                minimapCtx.fillStyle = '#a855f7';
+                minimapCtx.fill();
+            }
+        }
+
+        function updateHUD() {
+            if (!player) return;
+
+            const hpBar = document.getElementById('hp-bar');
+            const hpText = document.getElementById('hp-text');
+            const xpBar = document.getElementById('xp-bar');
+            const levelBadge = document.getElementById('level-badge');
+            const coinCounter = document.getElementById('coin-counter');
+            const areaTitle = document.getElementById('area-title');
+            const roomTitle = document.getElementById('room-title');
+
+            if (hpBar) hpBar.style.width = `${Math.max(0, (player.hp / player.maxHp) * 100)}%`;
+            if (hpText) hpText.innerText = `${Math.ceil(player.hp)} / ${player.maxHp}`;
+            if (xpBar) xpBar.style.width = `${Math.min(100, (player.xp / player.xpToNextLevel) * 100)}%`;
+            if (levelBadge) levelBadge.innerText = `LV. ${player.level}`;
+            if (coinCounter) coinCounter.innerText = `${saveData.coins}`;
+
+            const cfg = AREA_CONFIGS[currentArea] || AREA_CONFIGS[1];
+            if (areaTitle) areaTitle.innerText = `AREA ${currentArea}: ${cfg.name}`;
+            if (roomTitle) roomTitle.innerText = `ROOM ${currentRoom} / 5`;
+        }
+
+        function updateBossHUD() {
+            if (!activeBoss) return;
+            const bar = document.getElementById('boss-hp-bar');
+            const name = document.getElementById('boss-name');
+            if (bar) bar.style.width = `${Math.max(0, (activeBoss.hp / activeBoss.maxHp) * 100)}%`;
+            if (name) name.innerText = activeBoss.name;
+        }
+
+        function hideAllModals() {
+            const modals = [
+                'modal-menu', 'modal-pause', 'modal-area', 'modal-shop',
+                'modal-upgrade', 'modal-room-clear', 'modal-gameover', 'modal-victory'
+            ];
+            modals.forEach(id => hideElement(id));
+        }
+
+        function triggerLevelUpModal() {
+            if (!player) return;
+            isPaused = true;
+            const container = document.getElementById('upgrade-cards');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const available = UPGRADES_LIST.filter(u => (player.upgrades[u.id] || 0) < 3);
+            const shuffled = [...available].sort(() => 0.5 - Math.random()).slice(0, 3);
+
+            shuffled.forEach(upg => {
+                const currLvl = player.upgrades[upg.id] || 0;
+                const card = document.createElement('div');
+                card.className = `glass-panel p-5 rounded-2xl border-2 hover:scale-105 cursor-pointer text-left btn-action flex flex-col justify-between rarity-${upg.rarity.toLowerCase()}`;
+                
+                card.innerHTML = `<div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-sky-300 uppercase">${upg.rarity}</span>
+                        <span class="text-xs font-mono font-bold text-amber-400">LV. ${currLvl} ➔ ${currLvl + 1}</span>
+                    </div>
+                    <h4 class="font-black text-white text-base mb-1">${upg.name}</h4>
+                    <p class="text-xs text-slate-300 leading-relaxed">${upg.desc}</p>
+                </div>`;
+
+                card.onclick = () => {
+                    player.upgrades[upg.id] = currLvl + 1;
+                    hideElement('modal-upgrade');
+                    pendingLevelUps--;
+                    audio.playClick();
+                    if (pendingLevelUps > 0) {
+                        triggerLevelUpModal();
+                    } else {
+                        isPaused = false;
+                    }
+                };
+
+                container.appendChild(card);
+            });
+
+            showElement('modal-upgrade', 'flex');
+        }
+
+        function triggerGameOver() {
+            isGameRunning = false;
+            saveGameData();
+            document.getElementById('go-area').innerText = currentArea;
+            document.getElementById('go-room').innerText = currentRoom;
+            document.getElementById('go-coins').innerText = saveData.coins;
+            showElement('modal-gameover', 'flex');
+        }
+
+        function openAreaSelect() {
+            const list = document.getElementById('area-list');
+            if (!list) return;
+            list.innerHTML = '';
+
+            for (let a = 1; a <= 6; a++) {
+                const cfg = AREA_CONFIGS[a];
+                const isUnlocked = a <= saveData.unlockedArea;
+                const card = document.createElement('div');
+
+                card.className = `glass-panel p-4 rounded-2xl border-2 ${
+                    isUnlocked
+                        ? 'border-sky-400/40 hover:border-sky-400 cursor-pointer btn-action'
+                        : 'border-slate-700 opacity-60 cursor-not-allowed'
+                } flex justify-between items-center`;
+
+                card.innerHTML = `<div>
+                    <div class="text-xs font-bold text-sky-400">AREA ${a}</div>
+                    <div class="text-sm font-black text-white">${cfg.name}</div>
+                </div>
+                <div>${isUnlocked ? '🔓' : '🔒'}</div>`;
+
+                if (isUnlocked) {
+                    card.onclick = () => {
+                        startNewRun(a);
+                        hideElement('modal-area');
+                    };
+                }
+                list.appendChild(card);
+            }
+            showElement('modal-area', 'flex');
+        }
+
+        function openShop() {
+            const list = document.getElementById('shop-items');
+            if (!list) return;
+            list.innerHTML = '';
+
+            document.getElementById('shop-coin-count').innerText = saveData.coins;
+
+            const shopDefs = [
+                { id: 'hp', name: 'Base HP', desc: '+15 HP Maksimal', cost: 50 },
+                { id: 'dmg', name: 'Base Damage', desc: '+5 Damage Ikan', cost: 60 },
+                { id: 'speed', name: 'Move Speed', desc: '+0.3 Kecepatan Jalan', cost: 40 },
+                { id: 'atkSpd', name: 'Attack Speed', desc: '+8% Kecepatan Lempar', cost: 75 },
+                { id: 'crit', name: 'Critical Chance', desc: '+3% Peluang Crit', cost: 80 }
+            ];
+
+            shopDefs.forEach(item => {
+                const lvl = (saveData.upgrades && saveData.upgrades[item.id]) ? saveData.upgrades[item.id] : 0;
+                const cost = item.cost + lvl * 40;
+                const card = document.createElement('div');
+
+                card.className = `glass-panel p-3.5 rounded-2xl flex justify-between items-center border-slate-700`;
+                card.innerHTML = `<div>
+                    <div class="text-sm font-bold text-white">${item.name} <span class="text-amber-400 text-xs">(LV. ${lvl})</span></div>
+                    <div class="text-[11px] text-slate-300">${item.desc}</div>
+                </div>
+                <button class="px-3 py-1.5 glass-panel bg-amber-500/20 text-amber-300 font-bold text-xs rounded-xl btn-action border-amber-400/40">
+                    🐟 ${cost}
+                </button>`;
+
+                const btn = card.querySelector('button');
+                btn.onclick = () => {
+                    if (saveData.coins >= cost) {
+                        saveData.coins -= cost;
+                        saveData.upgrades[item.id] = lvl + 1;
+                        saveGameData();
+                        audio.playClick();
+                        openShop();
+                    }
+                };
+
+                list.appendChild(card);
+            });
+
+            showElement('modal-shop', 'flex');
+        }
+
+        function setupControls() {
+            window.addEventListener('keydown', e => {
+                keys[e.code] = true;
+                if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+                    e.preventDefault();
+                }
+            });
+            window.addEventListener('keyup', e => keys[e.code] = false);
+
+            const zone = document.getElementById('joystick-zone');
+            const knob = document.getElementById('joystick-knob');
+
+            if (zone && knob) {
+                const handleTouchMove = (e) => {
+                    if (!joystickActive) return;
+                    if (e.cancelable) e.preventDefault();
+                    const touch = e.touches[0];
+                    const rect = zone.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+
+                    let dx = touch.clientX - centerX;
+                    let dy = touch.clientY - centerY;
+                    const maxDist = rect.width / 2;
+                    const dist = Math.hypot(dx, dy);
+
+                    if (dist > maxDist) {
+                        dx = (dx / dist) * maxDist;
+                        dy = (dy / dist) * maxDist;
+                    }
+
+                    knob.style.transform = `translate(${dx}px, ${dy}px)`;
+                    joystickVector.x = dx / maxDist;
+                    joystickVector.y = dy / maxDist;
+                };
+
+                zone.addEventListener('touchstart', e => {
+                    if (!isGameRunning || isPaused) return;
+                    joystickActive = true;
+                    handleTouchMove(e);
+                }, { passive: false });
+
+                zone.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+                const resetJoystick = () => {
+                    joystickActive = false;
+                    joystickVector = { x: 0, y: 0 };
+                    knob.style.transform = 'translate(0px, 0px)';
+                };
+
+                zone.addEventListener('touchend', resetJoystick);
+                zone.addEventListener('touchcancel', resetJoystick);
+            }
+        }
+
+        function setupUIEvents() {
+            const addAction = (id, fn) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        fn();
+                    });
+                }
+            };
+
+            addAction('btn-main-play', () => {
+                audio.init();
+                audio.playClick();
+                startNewRun(1);
+            });
+
+            addAction('btn-area-select', () => {
+                audio.init();
+                audio.playClick();
+                openAreaSelect();
+            });
+
+            addAction('btn-close-area', () => {
+                hideElement('modal-area');
+            });
+
+            addAction('btn-shop', () => {
+                audio.init();
+                audio.playClick();
+                openShop();
+            });
+
+            addAction('btn-close-shop', () => {
+                hideElement('modal-shop');
+            });
+
+            addAction('btn-dash', () => {
+                if (player) player.performDash();
+            });
+
+            // PAUSE EVENTS
+            addAction('btn-pause', () => {
+                if (!isGameRunning) return;
+                isPaused = true;
+                audio.playClick();
+                showElement('modal-pause', 'flex');
+            });
+
+            addAction('btn-resume', () => {
+                isPaused = false;
+                audio.playClick();
+                hideElement('modal-pause');
+            });
+
+            addAction('btn-pause-restart', () => {
+                audio.playClick();
+                hideElement('modal-pause');
+                startNewRun(currentArea);
+            });
+
+            addAction('btn-pause-main', () => {
+                audio.playClick();
+                exitToMainMenu();
+            });
+
+            addAction('btn-next-room', () => {
+                hideElement('modal-room-clear');
+                isPaused = false;
+
+                if (currentRoom < 5) {
+                    currentRoom++;
+                    spawnRoomEnemies();
+                    updateHUD();
+                } else {
+                    if (currentArea < 6) {
+                        currentArea++;
+                        currentRoom = 1;
+                        if (currentArea > saveData.unlockedArea) {
+                            saveData.unlockedArea = currentArea;
+                            saveGameData();
+                        }
+                        spawnRoomEnemies();
+                        updateHUD();
+                    } else {
+                        showElement('modal-victory', 'flex');
+                    }
+                }
+            });
+
+            addAction('btn-retry', () => {
+                startNewRun(currentArea);
+            });
+
+            addAction('btn-gameover-main', () => {
+                exitToMainMenu();
+            });
+
+            addAction('btn-victory-main', () => {
+                exitToMainMenu();
+            });
+
+            addAction('btn-sound-toggle', () => {
+                audio.muted = !audio.muted;
+                const toggleBtn = document.getElementById('btn-sound-toggle');
+                if (toggleBtn) toggleBtn.innerText = audio.muted ? '🔇' : '🔊';
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initGame();
+        });
+    </script>
 </body>
 </html>
+```
